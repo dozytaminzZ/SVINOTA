@@ -1,0 +1,33 @@
+# Виртуальное окружение
+venv/
+.venv/
+env/
+.env_venv/
+
+# Environment variables
+.env
+.env.local
+
+# Python byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Flask stuff
+instance/
+.webassets-cache
+
+# Локальные базы данных (на всякий случай)
+*.sqlite3
+*.sqlite
+*.db
+
+# Логи
+*.log
+logs/
+
+# Настройки IDE и ОС
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
