@@ -29,6 +29,7 @@ class RoomPlayer(db.Model):
     room_id = db.Column(db.Uuid(as_uuid=True), db.ForeignKey('rooms.id'), nullable=False)
     user_id = db.Column(db.Uuid(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
     seat_index = db.Column(db.Integer, nullable=False)
+    is_ready = db.Column(db.Boolean, default=False, nullable=False)
 
 class Game(db.Model):
     __tablename__ = 'games'

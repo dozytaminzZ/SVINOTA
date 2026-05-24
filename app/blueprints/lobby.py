@@ -2,7 +2,7 @@ import random
 import string
 import uuid
 
-from flask import Blueprint, request
+from flask import Blueprint, render_template, request
 from flask_login import current_user, login_required
 
 from app.extensions import db
@@ -13,6 +13,10 @@ lobby_bp = Blueprint('lobby', __name__)
 @lobby_bp.route('/', methods=['GET'])
 def lobby_index():
     return {'status': 'lobby module in development'}
+
+@lobby_bp.route('/dev', methods=['GET'])
+def lobby_dev_form():
+    return render_template('lobby_dev.html')
 
 def _json_error(message, status_code=400):
     return {'error': message}, status_code
@@ -39,7 +43,12 @@ def _unique_invite_code(length=8):
         if Room.query.filter_by(invite_code=code).first() is None:
             return code
 
-def _room_payload(room, players_count):
+def _room_counts(room_id):
+    players_count = RoomPlayer.query.filter_by(room_id=room_id).count()
+    ready_count = RoomPlayer.query.filter_by(room_id=room_id, is_ready=True).count()
+    return players_count, ready_count
+
+def _room_payload(room, players_count, ready_count):
     return {
         'id': str(room.id),
         'owner_id': str(room.owner_id),
@@ -47,6 +56,7 @@ def _room_payload(room, players_count):
         'status': room.status,
         'max_players': room.max_players,
         'players_count': players_count,
+        'ready_count': ready_count,
         'is_private': room.is_private
     }
 
@@ -60,8 +70,8 @@ def get_rooms():
     rooms = query.all()
     payload = []
     for room in rooms:
-        players_count = RoomPlayer.query.filter_by(room_id=room.id).count()
-        payload.append(_room_payload(room, players_count))
+        players_count, ready_count = _room_counts(room.id)
+        payload.append(_room_payload(room, players_count, ready_count))
 
     return {'status': 'ok', 'rooms': payload}
 
@@ -102,7 +112,8 @@ def create_room():
     db.session.add(owner_member)
     db.session.commit()
 
-    return {'status': 'ok', 'room': _room_payload(room, 1)}, 201
+    players_count, ready_count = _room_counts(room.id)
+    return {'status': 'ok', 'room': _room_payload(room, players_count, ready_count)}, 201
 
 @lobby_bp.route('/join', methods=['POST'])
 @login_required
@@ -134,8 +145,8 @@ def join_room():
     existing_membership = RoomPlayer.query.filter_by(user_id=current_user.id).first()
     if existing_membership is not None:
         if existing_membership.room_id == room.id:
-            players_count = RoomPlayer.query.filter_by(room_id=room.id).count()
-            return {'status': 'ok', 'room': _room_payload(room, players_count)}
+            players_count, ready_count = _room_counts(room.id)
+            return {'status': 'ok', 'room': _room_payload(room, players_count, ready_count)}
         return _json_error('user already in a room', 409)
 
     current_players = RoomPlayer.query.filter_by(room_id=room.id).all()
@@ -149,8 +160,8 @@ def join_room():
     db.session.add(member)
     db.session.commit()
 
-    players_count = len(current_players) + 1
-    return {'status': 'ok', 'room': _room_payload(room, players_count)}
+    players_count, ready_count = _room_counts(room.id)
+    return {'status': 'ok', 'room': _room_payload(room, players_count, ready_count)}
 
 @lobby_bp.route('/leave', methods=['POST'])
 @login_required
@@ -180,3 +191,36 @@ def leave_room():
 
     db.session.commit()
     return {'status': 'ok'}
+
+@lobby_bp.route('/ready', methods=['POST'])
+@login_required
+def set_ready():
+    data = _get_request_data()
+    room_id_raw = (data.get('room_id') or '').strip()
+
+    query = RoomPlayer.query.filter_by(user_id=current_user.id)
+    if room_id_raw:
+        try:
+            room_uuid = uuid.UUID(room_id_raw)
+        except ValueError:
+            return _json_error('invalid room_id')
+        query = query.filter_by(room_id=room_uuid)
+
+    membership = query.first()
+    if membership is None:
+        return _json_error('user is not in a room', 404)
+
+    if 'is_ready' in data:
+        membership.is_ready = _parse_bool(data.get('is_ready'), default=False)
+    else:
+        membership.is_ready = not membership.is_ready
+
+    db.session.commit()
+    room = db.session.get(Room, membership.room_id)
+    players_count, ready_count = _room_counts(membership.room_id)
+
+    return {
+        'status': 'ok',
+        'is_ready': membership.is_ready,
+        'room': _room_payload(room, players_count, ready_count)
+    }

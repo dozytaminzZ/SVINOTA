@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from config.settings import Config
 from app.extensions import db, migrate, socketio, login_manager
 
@@ -34,9 +34,19 @@ def create_app(config_class=Config):
             'modules': {
                 'auth': '/auth/',
                 'lobby': '/lobby/',
+                'docs': '/docs',
+                'openapi': '/openapi.yaml',
                 'health': '/health'
             }
         }
+
+    @app.route('/docs')
+    def docs():
+        return render_template('docs.html')
+
+    @app.route('/openapi.yaml')
+    def openapi_spec():
+        return app.send_static_file('openapi.yaml')
 
     @app.route('/health')
     def health_check():
