@@ -20,6 +20,7 @@ class Room(db.Model):
     invite_code = db.Column(db.String(8), unique=True, nullable=False)
     status = db.Column(db.String(20), default='waiting') # waiting, playing, finished
     max_players = db.Column(db.Integer, default=6)
+    is_private = db.Column(db.Boolean, default=False, nullable=False)
 
 class RoomPlayer(db.Model):
     __tablename__ = 'room_players'
