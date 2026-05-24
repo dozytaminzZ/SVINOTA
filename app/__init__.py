@@ -1,3 +1,4 @@
+import uuid
 from flask import Flask, render_template
 from config.settings import Config
 from app.extensions import db, migrate, socketio, login_manager
@@ -18,7 +19,11 @@ def create_app(config_class=Config):
 
     @login_manager.user_loader
     def load_user(user_id):
-        return db.session.get(User, user_id)
+        try:
+            user_uuid = uuid.UUID(user_id) if isinstance(user_id, str) else user_id
+        except (ValueError, TypeError, AttributeError):
+            return None
+        return db.session.get(User, user_uuid)
 
     # Регистрация blueprints
     from app.blueprints.auth import auth_bp
