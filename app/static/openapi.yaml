@@ -90,6 +90,81 @@ components:
           type: boolean
         room:
           $ref: '#/components/schemas/Room'
+    Card:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        color:
+          type: string
+          nullable: true
+        type:
+          type: string
+        value:
+          type: integer
+          nullable: true
+    GamePlayerState:
+      type: object
+      properties:
+        id:
+          type: string
+        hand_count:
+          type: integer
+        is_current:
+          type: boolean
+    GameState:
+      type: object
+      properties:
+        game_id:
+          type: string
+        status:
+          type: string
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/GamePlayerState'
+        current_player_id:
+          type: string
+        direction:
+          type: integer
+        current_color:
+          type: string
+          nullable: true
+        top_discard:
+          $ref: '#/components/schemas/Card'
+        deck_count:
+          type: integer
+        discard_count:
+          type: integer
+        pending_draw:
+          type: integer
+        svintus:
+          type: array
+          items:
+            type: object
+        cover_deck:
+          type: object
+        viewer_hand:
+          type: array
+          items:
+            $ref: '#/components/schemas/Card'
+    GameStateResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        state:
+          $ref: '#/components/schemas/GameState'
+    GameActionResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        result:
+          type: object
+        state:
+          $ref: '#/components/schemas/GameState'
 paths:
   /health:
     get:
@@ -333,3 +408,159 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReadyResponse'
+  /game/state:
+    get:
+      summary: Get current game state
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: room_id
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameStateResponse'
+  /game/create:
+    post:
+      summary: Create game for room
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameStateResponse'
+  /game/play:
+    post:
+      summary: Play a card
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+                card_id:
+                  type: string
+                  format: uuid
+                chosen_color:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameActionResponse'
+  /game/draw:
+    post:
+      summary: Draw a card
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameActionResponse'
+  /game/pass:
+    post:
+      summary: Pass turn
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameActionResponse'
+  /game/svintus:
+    post:
+      summary: Call Svintus
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameActionResponse'
+  /game/cover-press:
+    post:
+      summary: Press cover-deck action
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameActionResponse'

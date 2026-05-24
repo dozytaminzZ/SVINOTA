@@ -28,9 +28,14 @@ def create_app(config_class=Config):
     # Регистрация blueprints
     from app.blueprints.auth import auth_bp
     from app.blueprints.lobby import lobby_bp
+    from app.blueprints.game import game_bp
     
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(lobby_bp, url_prefix='/lobby')
+    app.register_blueprint(game_bp, url_prefix='/game')
+
+    from app.sockets.game import register_game_socket_handlers
+    register_game_socket_handlers(socketio)
 
     @app.route('/')
     def index():
