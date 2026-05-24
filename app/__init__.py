@@ -41,6 +41,7 @@ def create_app(config_class=Config):
                 'lobby': '/lobby/',
                 'docs': '/docs',
                 'openapi': '/openapi.yaml',
+                'game': '/game/',
                 'health': '/health'
             }
         }
