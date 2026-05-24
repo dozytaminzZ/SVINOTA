@@ -1,6 +1,6 @@
 import uuid
 
-from flask import Blueprint, request
+from flask import Blueprint, render_template, request
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -13,8 +13,18 @@ auth_bp = Blueprint('auth', __name__)
 def auth_index():
     return {'status': 'auth module in development'}
 
+@auth_bp.route('/dev', methods=['GET'])
+def auth_dev_form():
+    return render_template('auth_dev.html')
+
 def _json_error(message, status_code=400):
     return {'error': message}, status_code
+
+def _get_request_data():
+    data = request.get_json(silent=True)
+    if data is None:
+        data = request.form.to_dict()
+    return data or {}
 
 def _user_payload(user):
     return {
@@ -38,7 +48,7 @@ def register():
     if current_user.is_authenticated:
         return _json_error('already authenticated', 400)
 
-    data = request.get_json(silent=True) or {}
+    data = _get_request_data()
     username = (data.get('username') or '').strip()
     password = data.get('password') or ''
     email = (data.get('email') or '').strip() or None
@@ -71,7 +81,7 @@ def login():
     if current_user.is_authenticated:
         return _json_error('already authenticated', 400)
 
-    data = request.get_json(silent=True) or {}
+    data = _get_request_data()
     username = (data.get('username') or '').strip()
     email = (data.get('email') or '').strip()
     password = data.get('password') or ''
@@ -98,7 +108,7 @@ def guest_login():
     if current_user.is_authenticated:
         return _json_error('already authenticated', 400)
 
-    data = request.get_json(silent=True) or {}
+    data = _get_request_data()
     base_username = (data.get('username') or '').strip() or 'guest'
     base_username = base_username[:45]
     username = _unique_guest_username(base_username)
