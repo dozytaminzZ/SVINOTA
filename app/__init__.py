@@ -1,6 +1,6 @@
 from flask import Flask
 from config.settings import Config
-from app.extensions import db, migrate, socketio
+from app.extensions import db, migrate, socketio, login_manager
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -10,9 +10,15 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
     socketio.init_app(app, cors_allowed_origins="*")
+    login_manager.init_app(app)
 
     # Импорт моделей (чтобы Alembic их увидел)
     from app import models
+    from app.models import User
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return db.session.get(User, user_id)
 
     # Регистрация blueprints
     from app.blueprints.auth import auth_bp
@@ -20,6 +26,17 @@ def create_app(config_class=Config):
     
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(lobby_bp, url_prefix='/lobby')
+
+    @app.route('/')
+    def index():
+        return {
+            'status': 'ok',
+            'modules': {
+                'auth': '/auth/',
+                'lobby': '/lobby/',
+                'health': '/health'
+            }
+        }
 
     @app.route('/health')
     def health_check():

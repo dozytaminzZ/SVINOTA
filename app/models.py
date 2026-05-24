@@ -1,7 +1,8 @@
 import uuid
+from flask_login import UserMixin
 from app.extensions import db
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
     
     id = db.Column(db.Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
