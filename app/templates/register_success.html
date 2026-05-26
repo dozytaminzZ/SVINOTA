@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация прошла успешно - SVINOTA{% endblock %}
+
+{% block content %}
+<div class="page auth-page success-page">
+    <meta http-equiv="refresh" content="3; url={{ url_for('index') }}">
+
+    <main class="success-wrap">
+        <div class="logo-composition auth-logo-composition success-logo-composition">
+            <div class="arc-logo arc-logo-auth">
+                <svg viewBox="0 0 420 250" xmlns="http://www.w3.org/2000/svg" aria-label="SVINOTA ONLINE">
+                    <defs>
+                        <path id="successArcPath" d="M 35 205 A 175 175 0 0 1 385 205" />
+                    </defs>
+
+                    <text>
+                        <textPath href="#successArcPath" startOffset="50%" text-anchor="middle">
+                            SVINOTA ONLINE
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+        </div>
+
+        <div class="success-icon" aria-hidden="true"></div>
+
+        <h1 class="success-title">Регистрация прошла успешно!</h1>
+
+        <p class="success-note">
+            Через 3 секунды вы вернетесь в<br>
+            главное меню
+        </p>
+    </main>
+</div>
+{% endblock %}

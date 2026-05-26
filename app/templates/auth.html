@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="page auth-page">
+<div class="page auth-page{% if is_register %} auth-page-register{% endif %}">
 
     {% if is_register %}
         <a class="back-link" href="/auth/">Назад</a>
@@ -34,9 +34,9 @@
     <main class="auth-wrap">
         <div class="logo-composition auth-logo-composition">
             <div class="arc-logo arc-logo-auth">
-                <svg viewBox="0 0 320 190" xmlns="http://www.w3.org/2000/svg" aria-label="SVINOTA ONLINE">
+                <svg viewBox="0 0 420 250" xmlns="http://www.w3.org/2000/svg" aria-label="SVINOTA ONLINE">
                     <defs>
-                        <path id="authArcPath" d="M 35 150 A 125 125 0 0 1 285 150" />
+                        <path id="authArcPath" d="M 35 205 A 175 175 0 0 1 385 205" />
                     </defs>
 
                     <text>
@@ -47,11 +47,6 @@
                 </svg>
             </div>
 
-            <img
-                class="main-avatar auth-avatar"
-                src="{{ url_for('static', filename='img/logo.png') }}"
-                alt="Аватар SVINOTA"
-            >
         </div>
 
         <section class="auth-panel">
@@ -63,7 +58,7 @@
                 {% endif %}
             </h1>
 
-            <form class="auth-form" method="post">
+            <form class="auth-form{% if is_register %} register-form{% endif %}" method="post">
                 <input
                     class="auth-input"
                     type="text"
