@@ -1,0 +1,238 @@
+/* =========================
+   Авторизация / регистрация
+   ========================= */
+
+.auth-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    transform: translateY(-10px);
+}
+
+/* =========================
+   Логотип на auth-странице
+   ========================= */
+
+.auth-logo-composition {
+    width: 380px;
+    height: 270px;
+}
+
+.arc-logo-auth {
+    position: absolute;
+    top: 0;
+    left: 50%;
+
+    transform: translateX(-50%);
+}
+
+.arc-logo-auth svg {
+    width: 380px;
+    height: auto;
+}
+
+.arc-logo-auth text {
+    font-size: 32px;
+}
+
+.auth-avatar {
+    top: 133px;
+
+    width: 95px;
+    height: 95px;
+}
+
+/* =========================
+   Панель формы
+   ========================= */
+
+.auth-panel {
+    position: relative;
+
+    width: 490px;
+    min-height: 430px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    padding: 0 48px 42px;
+
+    background: rgba(31, 28, 27, 0.94);
+    border-radius: 17px;
+}
+
+.auth-title {
+    margin: -26px 0 46px;
+
+    padding: 4px 26px;
+
+    background: #271819;
+    border: 2px solid #4b2022;
+
+    color: #ffffff;
+
+    font-size: 38px;
+    font-weight: 400;
+    line-height: 1.1;
+}
+
+.auth-form {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+}
+
+.auth-input {
+    width: 100%;
+    height: 76px;
+
+    padding: 0 20px;
+
+    background: #ffffff;
+    color: #222222;
+
+    border: 3px solid #8c9234;
+    outline: none;
+
+    font-size: 30px;
+}
+
+.auth-input::placeholder {
+    color: #9b9b9b;
+}
+
+.auth-input:focus {
+    border-color: #b2b94a;
+}
+
+/* =========================
+   Кнопки внутри авторизации
+   ========================= */
+
+.auth-submit {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.register-link {
+    width: 100%;
+    margin-top: 28px;
+}
+
+/* =========================
+   Ошибки справа
+   ========================= */
+
+.error-stack {
+    position: absolute;
+    top: 42px;
+    right: 58px;
+    z-index: 4;
+
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.error-message {
+    min-width: 210px;
+
+    padding: 18px 20px;
+
+    background: #ffffff;
+    color: #a52727;
+
+    border-radius: 12px;
+
+    font-size: 18px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* =========================
+   Адаптив
+   ========================= */
+
+@media (max-width: 700px) {
+    body {
+        background-size: 340px auto;
+    }
+
+    .logo-composition {
+        width: 320px;
+        height: 250px;
+    }
+
+    .arc-logo-main svg,
+    .arc-logo-auth svg {
+        width: 320px;
+    }
+
+    .arc-logo-main text,
+    .arc-logo-auth text {
+        font-size: 28px;
+        letter-spacing: 4px;
+    }
+
+    .main-avatar {
+        top: 128px;
+
+        width: 90px;
+        height: 90px;
+    }
+
+    .auth-panel {
+        width: 320px;
+
+        padding-left: 28px;
+        padding-right: 28px;
+    }
+
+    .auth-title {
+        font-size: 28px;
+    }
+
+    .auth-input {
+        height: 58px;
+
+        font-size: 21px;
+    }
+
+    .game-btn {
+        min-width: 220px;
+        height: 56px;
+
+        font-size: 22px;
+        letter-spacing: 2px;
+    }
+
+    .main-actions {
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .back-link {
+        min-width: 110px;
+        height: 54px;
+
+        font-size: 22px;
+    }
+
+    .error-stack {
+        position: static;
+
+        margin-bottom: 24px;
+
+        align-items: center;
+    }
+}

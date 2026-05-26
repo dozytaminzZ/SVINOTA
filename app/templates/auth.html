@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% set is_register = request.path.startswith('/auth/register') %}
+
+{% block title %}
+    {% if is_register %}
+        Регистрация - SVINOTA
+    {% else %}
+        Авторизация - SVINOTA
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page auth-page">
+
+    {% if is_register %}
+        <a class="back-link" href="/auth/">Назад</a>
+    {% else %}
+        <a class="back-link" href="/">Назад</a>
+    {% endif %}
+
+    {% if password_error or nickname_error %}
+        <div class="error-stack">
+            {% if password_error %}
+                <div class="error-message">Неверно введен пароль!</div>
+            {% endif %}
+
+            {% if nickname_error %}
+                <div class="error-message">Такой ник уже занят!</div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <main class="auth-wrap">
+        <div class="logo-composition auth-logo-composition">
+            <div class="arc-logo arc-logo-auth">
+                <svg viewBox="0 0 320 190" xmlns="http://www.w3.org/2000/svg" aria-label="SVINOTA ONLINE">
+                    <defs>
+                        <path id="authArcPath" d="M 35 150 A 125 125 0 0 1 285 150" />
+                    </defs>
+
+                    <text>
+                        <textPath href="#authArcPath" startOffset="50%" text-anchor="middle">
+                            SVINOTA ONLINE
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+
+            <img
+                class="main-avatar auth-avatar"
+                src="{{ url_for('static', filename='img/logo.png') }}"
+                alt="Аватар SVINOTA"
+            >
+        </div>
+
+        <section class="auth-panel">
+            <h1 class="auth-title">
+                {% if is_register %}
+                    Регистрация
+                {% else %}
+                    Авторизация
+                {% endif %}
+            </h1>
+
+            <form class="auth-form" method="post">
+                <input
+                    class="auth-input"
+                    type="text"
+                    name="username"
+                    placeholder="Введите ник"
+                    autocomplete="username"
+                    required
+                >
+
+                <input
+                    class="auth-input"
+                    type="password"
+                    name="password"
+                    placeholder="Введите пароль"
+                    autocomplete="{% if is_register %}new-password{% else %}current-password{% endif %}"
+                    required
+                >
+
+                {% if is_register %}
+                    <input
+                        class="auth-input"
+                        type="password"
+                        name="password_repeat"
+                        placeholder="Повторите пароль"
+                        autocomplete="new-password"
+                        required
+                    >
+                {% endif %}
+
+                <button class="game-btn auth-submit" type="submit">
+                    {% if is_register %}
+                        Зарегистрироваться
+                    {% else %}
+                        Войти
+                    {% endif %}
+                </button>
+            </form>
+
+            {% if not is_register %}
+                <a class="game-btn register-link" href="/auth/register">
+                    Зарегистрироваться
+                </a>
+            {% endif %}
+        </section>
+    </main>
+
+</div>
+{% endblock %}

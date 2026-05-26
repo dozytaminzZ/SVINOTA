@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Главная - SVINOTA{% endblock %}
+
+{% block content %}
+<div class="page index-page">
+
+    <button class="info-btn" type="button">i</button>
+
+    <a class="auth-top-btn" href="/auth/">Авторизация</a>
+
+    <main class="index-content">
+        <div class="logo-composition">
+            <div class="arc-logo arc-logo-main">
+                <svg viewBox="0 0 320 190" xmlns="http://www.w3.org/2000/svg" aria-label="SVINOTA ONLINE">
+                    <defs>
+                        <path id="mainArcPath" d="M 35 150 A 125 125 0 0 1 285 150" />
+                    </defs>
+
+                    <text>
+                        <textPath href="#mainArcPath" startOffset="50%" text-anchor="middle">
+                            SVINOTA ONLINE
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+
+            <img
+                class="main-avatar"
+                src="{{ url_for('static', filename='img/logo.png') }}"
+                alt="Аватар SVINOTA"
+            >
+        </div>
+
+        <div class="main-actions">
+            <a class="game-btn" href="#">
+                Создать игру
+            </a>
+
+            <a class="game-btn" href="#">
+                Присоединиться
+            </a>
+        </div>
+    </main>
+
+</div>
+{% endblock %}

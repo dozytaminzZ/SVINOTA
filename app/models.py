@@ -1,9 +1,10 @@
 import uuid
 from app.extensions import db
 
+
 class User(db.Model):
     __tablename__ = 'users'
-    
+
     id = db.Column(db.Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = db.Column(db.String(255), unique=True, nullable=True) # None для гостевых аккаунтов
     password_hash = db.Column(db.String(255), nullable=True)
@@ -11,26 +12,29 @@ class User(db.Model):
     wins = db.Column(db.Integer, default=0)
     losses = db.Column(db.Integer, default=0)
 
+
 class Room(db.Model):
     __tablename__ = 'rooms'
-    
+
     id = db.Column(db.Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     owner_id = db.Column(db.Uuid(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
     invite_code = db.Column(db.String(8), unique=True, nullable=False)
     status = db.Column(db.String(20), default='waiting') # waiting, playing, finished
     max_players = db.Column(db.Integer, default=6)
 
+
 class RoomPlayer(db.Model):
     __tablename__ = 'room_players'
-    
+
     id = db.Column(db.Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     room_id = db.Column(db.Uuid(as_uuid=True), db.ForeignKey('rooms.id'), nullable=False)
     user_id = db.Column(db.Uuid(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
     seat_index = db.Column(db.Integer, nullable=False)
 
+
 class Game(db.Model):
     __tablename__ = 'games'
-    
+
     id = db.Column(db.Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     room_id = db.Column(db.Uuid(as_uuid=True), db.ForeignKey('rooms.id'), nullable=False)
     winner_id = db.Column(db.Uuid(as_uuid=True), db.ForeignKey('users.id'), nullable=True)
@@ -38,9 +42,10 @@ class Game(db.Model):
     direction = db.Column(db.Integer, default=1) # 1 - по часовой, -1 - против
     current_color = db.Column(db.String(10), nullable=True)
 
+
 class Card(db.Model):
     __tablename__ = 'cards'
-    
+
     id = db.Column(db.Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     game_id = db.Column(db.Uuid(as_uuid=True), db.ForeignKey('games.id'), nullable=False)
     owner_id = db.Column(db.Uuid(as_uuid=True), db.ForeignKey('users.id'), nullable=True)
@@ -48,9 +53,10 @@ class Card(db.Model):
     color = db.Column(db.String(10), nullable=True)
     location = db.Column(db.String(20), default='deck') # deck, hand, discard
 
+
 class Move(db.Model):
     __tablename__ = 'moves'
-    
+
     id = db.Column(db.Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     game_id = db.Column(db.Uuid(as_uuid=True), db.ForeignKey('games.id'), nullable=False)
     player_id = db.Column(db.Uuid(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
