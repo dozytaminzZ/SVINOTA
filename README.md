@@ -36,6 +36,21 @@ SECRET_KEY=dev_secret_key
 DATABASE_URL=postgresql://postgres:postgres@localhost/svinota
 ```
 
+Важно: PostgreSQL должен быть установлен и запущен.
+На Windows это можно сделать через `services.msc` (служба вида `postgresql-x64-...`).
+
+Создать базу можно через pgAdmin или psql:
+
+```sql
+CREATE DATABASE svinota;
+```
+
+Проверка подключения (опционально):
+
+```powershell
+psql -h localhost -U postgres -d svinota -c "\\conninfo"
+```
+
 4) Настрой миграции и создай таблицы:
 
 ```powershell
