@@ -1546,6 +1546,16 @@ a {
         text-shadow 0.22s ease;
 }
 
+.direction-arrow.is-clockwise {
+    transform: rotate(0deg);
+}
+
+.direction-arrow.is-counter-clockwise {
+    color: rgba(255, 178, 188, 0.86);
+    text-shadow: 0 0 18px rgba(231, 78, 100, 0.42);
+    transform: rotate(-18deg);
+}
+
 .opponents-row {
     position: absolute;
     left: 50%;

@@ -121,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const deckZone = document.querySelector('.deck-zone');
     const deckCard = document.querySelector('.deck-card');
     const playerHand = document.querySelector('.player-hand');
+    const directionArrow = document.querySelector('.direction-arrow');
     const svintusButton = document.querySelector('.svintus-btn');
     const roomId = gamePage?.dataset.roomId;
     const demoDeckCards = [
@@ -164,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         socket.on('game:state', (state) => {
             console.log('New game state:', state);
+            updateDirectionArrow(state.direction);
 
             /*
                 Позже сюда нужно добавить нормальную перерисовку:
@@ -303,6 +305,20 @@ document.addEventListener('DOMContentLoaded', () => {
             card_id: cardId,
             chosen_color: null
         });
+    }
+
+    function updateDirectionArrow(direction) {
+        if (!directionArrow) {
+            return;
+        }
+
+        const normalizedDirection = Number(direction) === -1 ? -1 : 1;
+        const isCounterClockwise = normalizedDirection === -1;
+
+        directionArrow.textContent = isCounterClockwise ? '↺' : '↻';
+        directionArrow.dataset.direction = String(normalizedDirection);
+        directionArrow.classList.toggle('is-counter-clockwise', isCounterClockwise);
+        directionArrow.classList.toggle('is-clockwise', !isCounterClockwise);
     }
 
     function removePlayedCard(card) {
