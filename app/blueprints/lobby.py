@@ -184,11 +184,9 @@ def create_game():
                 'room': _room_payload(room)
             }, 201
 
-        if not current_user.is_authenticated:
-            return redirect(url_for('auth.index'))
+        _ensure_guest_user()
 
         max_players = get_max_players_from_form()
-
         room, _ = _create_room_for_current_user(
             max_players=max_players,
             is_private=False
