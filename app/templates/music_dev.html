@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Music Dev</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    .card { border: 1px solid #ccc; border-radius: 6px; padding: 16px; max-width: 520px; }
+    button { padding: 8px 12px; }
+    code { background: #f5f5f5; padding: 2px 4px; }
+  </style>
+</head>
+<body>
+  <h1>Music Dev</h1>
+  <div class="card">
+    <p>This page starts music after the first click.</p>
+    <p>Tracks expected at:</p>
+    <ul>
+      <li><code>/static/audio/1.mp3</code></li>
+      <li><code>/static/audio/2.mp3</code></li>
+      <li><code>/static/audio/3.mp3</code></li>
+    </ul>
+    <button id="music-toggle">Toggle music</button>
+    <p id="music-status">Music: unknown</p>
+  </div>
+
+  <script src="/static/js/music.js"></script>
+  <script>
+    window.SvinotaMusic.init({
+      startOnFirstInteraction: true
+    });
+
+    const status = document.getElementById('music-status');
+    const button = document.getElementById('music-toggle');
+
+    const renderStatus = () => {
+      status.textContent = window.SvinotaMusic.isEnabled() ? 'Music: On' : 'Music: Off';
+    };
+
+    button.addEventListener('click', () => {
+      window.SvinotaMusic.toggle();
+      renderStatus();
+    });
+
+    renderStatus();
+  </script>
+</body>
+</html>
