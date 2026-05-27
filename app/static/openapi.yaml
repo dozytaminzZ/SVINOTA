@@ -1,0 +1,566 @@
+openapi: 3.0.3
+info:
+  title: SVINOTA API
+  version: 0.1.0
+servers:
+  - url: http://127.0.0.1:5000
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+    StatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+          nullable: true
+        wins:
+          type: integer
+        losses:
+          type: integer
+    AuthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+    Room:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        owner_id:
+          type: string
+          format: uuid
+        invite_code:
+          type: string
+        status:
+          type: string
+          enum: [waiting, playing, finished]
+        max_players:
+          type: integer
+        players_count:
+          type: integer
+        ready_count:
+          type: integer
+        is_private:
+          type: boolean
+    RoomResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        room:
+          $ref: '#/components/schemas/Room'
+    RoomsResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        rooms:
+          type: array
+          items:
+            $ref: '#/components/schemas/Room'
+    ReadyResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        is_ready:
+          type: boolean
+        room:
+          $ref: '#/components/schemas/Room'
+    Card:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        color:
+          type: string
+          nullable: true
+        type:
+          type: string
+        value:
+          type: integer
+          nullable: true
+    GamePlayerState:
+      type: object
+      properties:
+        id:
+          type: string
+        hand_count:
+          type: integer
+        is_current:
+          type: boolean
+    GameState:
+      type: object
+      properties:
+        game_id:
+          type: string
+        status:
+          type: string
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/GamePlayerState'
+        current_player_id:
+          type: string
+        direction:
+          type: integer
+        current_color:
+          type: string
+          nullable: true
+        top_discard:
+          $ref: '#/components/schemas/Card'
+        deck_count:
+          type: integer
+        discard_count:
+          type: integer
+        pending_draw:
+          type: integer
+        svintus:
+          type: array
+          items:
+            type: object
+        cover_deck:
+          type: object
+        viewer_hand:
+          type: array
+          items:
+            $ref: '#/components/schemas/Card'
+    GameStateResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        state:
+          $ref: '#/components/schemas/GameState'
+    GameActionResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        result:
+          type: object
+        state:
+          $ref: '#/components/schemas/GameState'
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /auth/dev:
+    get:
+      summary: Auth dev form
+      responses:
+        '200':
+          description: HTML form
+  /auth/register:
+    post:
+      summary: Register user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                email:
+                  type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/login:
+    post:
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/guest:
+    post:
+      summary: Guest login
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+  /auth/logout:
+    post:
+      summary: Logout
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /auth/profile:
+    get:
+      summary: Current user profile
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /lobby/dev:
+    get:
+      summary: Lobby dev form
+      responses:
+        '200':
+          description: HTML form
+  /lobby/rooms:
+    get:
+      summary: List rooms
+      parameters:
+        - in: query
+          name: public_only
+          schema:
+            type: string
+          description: "1/true for public rooms only"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomsResponse'
+  /lobby/create:
+    post:
+      summary: Create room
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                max_players:
+                  type: integer
+                  minimum: 2
+                  maximum: 6
+                is_private:
+                  type: boolean
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomResponse'
+  /lobby/join:
+    post:
+      summary: Join room
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+                invite_code:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomResponse'
+  /lobby/leave:
+    post:
+      summary: Leave room
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /lobby/ready:
+    post:
+      summary: Set ready status
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+                is_ready:
+                  type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyResponse'
+  /game/state:
+    get:
+      summary: Get current game state
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: room_id
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameStateResponse'
+  /game/create:
+    post:
+      summary: Create game for room
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameStateResponse'
+  /game/play:
+    post:
+      summary: Play a card
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+                card_id:
+                  type: string
+                  format: uuid
+                chosen_color:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameActionResponse'
+  /game/draw:
+    post:
+      summary: Draw a card
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameActionResponse'
+  /game/pass:
+    post:
+      summary: Pass turn
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameActionResponse'
+  /game/svintus:
+    post:
+      summary: Call Svintus
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameActionResponse'
+  /game/cover-press:
+    post:
+      summary: Press cover-deck action
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameActionResponse'

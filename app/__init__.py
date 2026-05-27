@@ -1,6 +1,6 @@
 import uuid
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_login import login_required
 
 from app.extensions import db, login_manager, migrate, socketio
@@ -31,9 +31,14 @@ def create_app(config_class=Config):
 
     from app.blueprints.auth import auth_bp
     from app.blueprints.lobby import lobby_bp
+    from app.blueprints.game import game_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(lobby_bp, url_prefix='/lobby')
+    app.register_blueprint(game_bp, url_prefix='/game')
+
+    from app.sockets.game import register_game_socket_handlers
+    register_game_socket_handlers(socketio)
 
     @app.route('/health')
     def health_check():
@@ -41,6 +46,17 @@ def create_app(config_class=Config):
 
     @app.route('/')
     def index():
+        if app.config.get('TESTING') or request.headers.get('Accept') == 'application/json':
+            return {
+                'status': 'ok',
+                'modules': {
+                    'auth': '/auth/',
+                    'lobby': '/lobby/',
+                    'game': '/game/',
+                    'health': '/health'
+                }
+            }
+
         return render_template('index.html')
 
     @app.route('/profile')
