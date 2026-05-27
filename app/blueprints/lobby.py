@@ -10,9 +10,12 @@ from app.models import Room, RoomPlayer
 
 
 lobby_bp = Blueprint('lobby', __name__)
+
+
 @lobby_bp.route('/', methods=['GET'])
 def lobby_index():
     return {'status': 'lobby module in development'}
+
 
 def get_max_players_from_form(default=6):
     try:
@@ -86,6 +89,38 @@ def _room_payload(room, players_count=None, ready_count=None):
     }
 
 
+def _create_room_for_current_user(max_players=6, is_private=False):
+    existing_membership = RoomPlayer.query.filter_by(user_id=current_user.id).first()
+
+    if existing_membership is not None:
+        existing_room = db.session.get(Room, existing_membership.room_id)
+
+        if existing_room is not None:
+            return existing_room, False
+
+    room = Room(
+        owner_id=current_user.id,
+        invite_code=_unique_invite_code(),
+        status='waiting',
+        max_players=max_players,
+        is_private=is_private
+    )
+
+    db.session.add(room)
+    db.session.flush()
+
+    owner_member = RoomPlayer(
+        room_id=room.id,
+        user_id=current_user.id,
+        seat_index=0
+    )
+
+    db.session.add(owner_member)
+    db.session.commit()
+
+    return room, True
+
+
 @lobby_bp.route('/create', methods=['GET', 'POST'])
 def create_game():
     creator_name = current_user.username if current_user.is_authenticated else 'Главный свинтус'
@@ -114,34 +149,27 @@ def create_game():
             if existing_membership is not None:
                 return _json_error('user already in a room', 409)
 
-            room = Room(
-                owner_id=current_user.id,
-                invite_code=_unique_invite_code(),
-                status='waiting',
+            room, _ = _create_room_for_current_user(
                 max_players=max_players,
                 is_private=is_private
             )
-
-            db.session.add(room)
-            db.session.flush()
-
-            owner_member = RoomPlayer(
-                room_id=room.id,
-                user_id=current_user.id,
-                seat_index=0
-            )
-
-            db.session.add(owner_member)
-            db.session.commit()
 
             return {
                 'status': 'ok',
                 'room': _room_payload(room)
             }, 201
 
+        if not current_user.is_authenticated:
+            return redirect(url_for('auth.index'))
+
         max_players = get_max_players_from_form()
 
-        return redirect(url_for('lobby.game_table', max_players=max_players))
+        room, _ = _create_room_for_current_user(
+            max_players=max_players,
+            is_private=False
+        )
+
+        return redirect(url_for('lobby.game_table', room_id=str(room.id)))
 
     return render_template(
         'create_game.html',
@@ -232,7 +260,7 @@ def join_game():
         elif not nickname:
             error = 'Укажите ник'
         else:
-            return redirect(url_for('lobby.game_table', lobby_id=lobby_id, nickname=nickname))
+            return redirect(url_for('lobby.game_table', room_id=lobby_id, nickname=nickname))
 
     return render_template(
         'join_game.html',
@@ -244,7 +272,17 @@ def join_game():
 
 @lobby_bp.route('/game', methods=['GET'])
 def game_table():
-    return render_template('lobby.html')
+    room = None
+    room_id_raw = (request.args.get('room_id') or '').strip()
+
+    if room_id_raw:
+        try:
+            room_uuid = uuid.UUID(room_id_raw)
+            room = db.session.get(Room, room_uuid)
+        except ValueError:
+            room = None
+
+    return render_template('lobby.html', room=room)
 
 
 @lobby_bp.route('/rooms', methods=['GET'])
