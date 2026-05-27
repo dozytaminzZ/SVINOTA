@@ -255,27 +255,18 @@
         background-size: cover;
     }
 
-    .logo-composition {
+    .auth-page .logo-composition {
         width: 320px;
         height: 250px;
     }
 
-    .arc-logo-main svg,
-    .arc-logo-auth svg {
+    .auth-page .arc-logo-auth svg {
         width: 320px;
     }
 
-    .arc-logo-main text,
-    .arc-logo-auth text {
+    .auth-page .arc-logo-auth text {
         font-size: 28px;
         letter-spacing: 4px;
-    }
-
-    .main-avatar {
-        top: 128px;
-
-        width: 90px;
-        height: 90px;
     }
 
     .auth-panel {
@@ -303,12 +294,7 @@
         letter-spacing: 0;
     }
 
-    .main-actions {
-        flex-direction: column;
-        gap: 18px;
-    }
-
-    .back-link {
+    .auth-page .back-link {
         min-width: 110px;
         height: 54px;
 

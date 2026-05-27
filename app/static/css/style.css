@@ -79,21 +79,13 @@ a {
     align-items: center;
     justify-content: center;
 
-    border: none;
     border-radius: 50%;
-
-    background: #8f3437;
-    color: #ffffff;
 
     font-size: 28px;
     font-weight: 700;
     font-family: Georgia, "Times New Roman", serif;
 
     cursor: pointer;
-}
-
-.info-btn:hover {
-    background: #a13c40;
 }
 
 .auth-top-btn {
@@ -112,15 +104,7 @@ a {
 
     border-radius: 16px;
 
-    background: #8f3437;
-    color: #ffffff;
-
     font-size: 16px;
-    text-decoration: none;
-}
-
-.auth-top-btn:hover {
-    background: #a13c40;
 }
 
 .profile-top-btn {
@@ -137,15 +121,6 @@ a {
     justify-content: center;
 
     border-radius: 50%;
-
-    background: #8f3437;
-    color: #ffffff;
-
-    text-decoration: none;
-}
-
-.profile-top-btn:hover {
-    background: #a13c40;
 }
 
 .profile-icon {
@@ -343,32 +318,6 @@ a {
         background 0.2s ease;
 }
 
-.game-btn:hover {
-    transform: translateY(-2px);
-
-    border-color: rgba(255, 118, 134, 0.95);
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(142, 52, 66, 0.98),
-            rgba(83, 30, 42, 0.98)
-        );
-
-    box-shadow:
-        0 0 42px rgba(215, 73, 94, 0.48),
-        inset 0 1px 0 rgba(255, 255, 255, 0.16),
-        inset 0 -18px 34px rgba(35, 10, 16, 0.3);
-}
-
-.game-btn:active {
-    transform: translateY(1px) scale(0.99);
-
-    box-shadow:
-        0 0 18px rgba(182, 55, 75, 0.28),
-        inset 0 4px 12px rgba(0, 0, 0, 0.35);
-}
-
 /* =========================
    Модальное окно опций
    ========================= */
@@ -383,8 +332,6 @@ a {
     justify-content: center;
 
     padding: 24px;
-
-    background: rgba(0, 0, 0, 0.58);
 }
 
 .options-overlay[hidden] {
@@ -403,12 +350,8 @@ a {
     align-items: center;
     justify-content: center;
 
-    background:
-        radial-gradient(circle at 50% 0%, rgba(119, 74, 66, 0.3), transparent 38%),
-        rgba(28, 24, 23, 0.97);
-    border: 2px solid rgba(111, 52, 49, 0.78);
+    border: 2px solid transparent;
     border-radius: 24px;
-    box-shadow: 0 22px 52px rgba(0, 0, 0, 0.46);
 }
 
 .options-title {
@@ -459,10 +402,7 @@ a {
     width: 46px;
     height: 46px;
 
-    border: none;
     border-radius: 50%;
-
-    background: transparent;
     color: #ffffff;
 
     cursor: pointer;
@@ -504,28 +444,10 @@ a {
     height: 74px;
     padding: 0 24px;
 
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #8f3437;
-    color: #ffffff;
-
-    border: 4px solid #8a8f1f;
-    border-radius: 8px;
-
     font: inherit;
     font-size: 30px;
     line-height: 1;
     white-space: nowrap;
-
-    cursor: pointer;
-    text-decoration: none;
-}
-
-.options-btn:hover {
-    background: #a13c40;
-    border-color: #a0a62a;
 }
 
 /* =========================
@@ -542,21 +464,7 @@ a {
     height: 44px;
     padding: 0 18px;
 
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #8f3437;
-    color: #ffffff;
-
-    border-radius: 16px;
-
     font-size: 18px;
-    text-decoration: none;
-}
-
-.back-link:hover {
-    background: #a13c40;
 }
 
 /* =========================
@@ -575,11 +483,6 @@ a {
     min-width: 132px;
     height: 54px;
     gap: 12px;
-
-    border: 3px solid #8a8f1f;
-    border-radius: 12px;
-
-    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.26);
 
     font-size: 22px;
 }
@@ -713,23 +616,15 @@ a {
     align-items: center;
     justify-content: center;
 
-    border: 4px solid #8a8f1f;
     border-radius: 26px;
 
-    background: rgba(255, 255, 255, 0.1);
     color: #ffffff;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 
     font-size: 28px;
     line-height: 1.2;
 
     cursor: pointer;
     overflow: hidden;
-}
-
-.profile-photo-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: #a0a62a;
 }
 
 .profile-photo-input {
@@ -905,7 +800,7 @@ a {
 
 .profile-field input:focus {
     background: rgba(255, 255, 255, 0.13);
-    border-color: #8a8f1f;
+    border-color: rgba(255, 118, 134, 0.86);
 }
 
 .field-icon {
@@ -1046,11 +941,6 @@ a {
     height: 50px;
 
     gap: 12px;
-
-    border: 1px solid rgba(223, 96, 111, 0.72);
-    border-radius: 14px;
-
-    background: linear-gradient(145deg, #633036, #8a343f);
 
     font-size: 21px;
 }
@@ -1248,12 +1138,6 @@ a {
     font-size: 27px;
 }
 
-.count-option input:checked + span,
-.count-option span:hover {
-    border-color: #cf6c78;
-    box-shadow: 0 0 18px rgba(207, 108, 120, 0.38);
-}
-
 .create-block p {
     margin: 16px 0 0;
 
@@ -1300,19 +1184,6 @@ a {
     align-items: center;
     justify-content: center;
 
-    border: none;
-    background: transparent;
-    color: #d56d79;
-
-    cursor: pointer;
-}
-
-.copy-code-btn:hover {
-    color: #ff9aa5;
-}
-
-.copy-code-btn.is-copied {
-    color: #7fe09b;
 }
 
 .copy-code-btn svg {
@@ -1328,68 +1199,13 @@ a {
     width: min(560px, 100%);
     height: 96px;
 
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
     padding: 0 28px;
-
-    border: 1px solid rgba(218, 87, 103, 0.9);
-    border-radius: 18px;
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(118, 43, 55, 0.92),
-            rgba(67, 25, 34, 0.96)
-        );
-
-    color: #fff2e8;
 
     font: inherit;
     font-size: 32px;
     font-weight: 500;
     letter-spacing: 2px;
-    text-decoration: none;
     line-height: 1;
-    cursor: pointer;
-
-    box-shadow:
-        0 0 28px rgba(182, 55, 75, 0.32),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12),
-        inset 0 -18px 34px rgba(35, 10, 16, 0.26);
-
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        border-color 0.2s ease,
-        background 0.2s ease;
-}
-
-.start-game-btn:hover {
-    transform: translateY(-2px);
-
-    border-color: rgba(255, 118, 134, 0.95);
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(142, 52, 66, 0.98),
-            rgba(83, 30, 42, 0.98)
-        );
-
-    box-shadow:
-        0 0 42px rgba(215, 73, 94, 0.48),
-        inset 0 1px 0 rgba(255, 255, 255, 0.16),
-        inset 0 -18px 34px rgba(35, 10, 16, 0.3);
-}
-
-.start-game-btn:active {
-    transform: translateY(1px) scale(0.99);
-
-    box-shadow:
-        0 0 18px rgba(182, 55, 75, 0.28),
-        inset 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 .create-middle-action {
@@ -1404,12 +1220,8 @@ a {
     align-items: center;
     justify-content: center;
 
-    border: 2px solid rgba(207, 108, 120, 0.54);
     border-radius: 50%;
-    background: rgba(52, 29, 31, 0.9);
-    box-shadow: 0 0 22px rgba(207, 108, 120, 0.38);
 
-    color: #e37b86;
     font-size: 36px;
 
     transform: translateX(-50%);
@@ -1610,7 +1422,7 @@ a {
 }
 
 .deck-zone p,
-.play-zone p {
+.discard-zone p {
     margin: 0;
 }
 
@@ -1654,32 +1466,23 @@ a {
     font-size: 42px;
 }
 
-.table-center-zone {
+.discard-zone {
     position: absolute;
-    left: 61%;
-    top: 56px;
+    right: 210px;
+    top: 105px;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 46px;
-
-    transform: translateX(-50%);
-}
-
-.play-zone {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 18px;
 
     color: #ceb3a3;
     font-size: 22px;
 }
 
-.play-zone-card {
-    width: 178px;
-    height: 268px;
+.discard-slot {
+    width: 144px;
+    height: 180px;
 
     display: flex;
     align-items: center;
@@ -1688,39 +1491,16 @@ a {
     border: 2px dashed rgba(196, 119, 100, 0.58);
     border-radius: 18px;
 
-    background:
-        radial-gradient(circle at 50% 50%, rgba(255, 220, 205, 0.05), transparent 40%),
-        rgba(255, 255, 255, 0.035);
-
     color: rgba(240, 190, 170, 0.72);
-    box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.05),
-        0 0 28px rgba(143, 52, 55, 0.26);
-
-    overflow: hidden;
-}
-
-.play-zone-card img {
-    width: 178px;
-    height: 268px;
-
-    display: block;
-
-    object-fit: cover;
-    border-radius: 16px;
-}
-
-.play-zone-empty {
-    padding: 0 14px;
-
-    color: rgba(255, 214, 190, 0.82);
-    font-size: 17px;
-    line-height: 1.25;
-    text-align: center;
+    font-size: 58px;
+    line-height: 1;
+    box-shadow: 0 0 28px rgba(143, 52, 55, 0.26);
 }
 
 .direction-arrow {
-    position: static;
+    position: absolute;
+    right: 112px;
+    top: 152px;
 
     min-width: 110px;
     height: 110px;
@@ -1737,19 +1517,6 @@ a {
         transform 0.22s ease,
         color 0.22s ease,
         text-shadow 0.22s ease;
-}
-
-.direction-arrow.is-clockwise {
-    transform: rotate(-12deg);
-}
-
-.direction-arrow.is-counterclockwise {
-    transform: rotate(12deg);
-}
-
-.direction-arrow.is-clockwise,
-.direction-arrow.is-counterclockwise {
-    text-shadow: 0 0 18px rgba(207, 143, 116, 0.24);
 }
 
 .opponents-row {
@@ -1981,24 +1748,6 @@ a {
         0 0 28px rgba(231, 78, 100, 0.62),
         0 18px 26px rgba(0, 0, 0, 0.34);
 }
-.play-card.is-selected {
-    z-index: 21;
-
-    transform: translateX(-50%) translateY(-28px);
-    box-shadow:
-        0 0 0 5px rgba(255, 196, 120, 0.8),
-        0 0 34px rgba(255, 177, 82, 0.7),
-        0 18px 26px rgba(0, 0, 0, 0.34);
-}
-.play-card.is-selected {
-    z-index: 21;
-
-    transform: translateX(-50%) translateY(-28px);
-    box-shadow:
-        0 0 0 5px rgba(255, 196, 120, 0.8),
-        0 0 34px rgba(255, 177, 82, 0.7),
-        0 18px 26px rgba(0, 0, 0, 0.34);
-}
 .play-card img {
     width: 100%;
     height: 100%;
@@ -2075,24 +1824,9 @@ a {
     width: 280px;
     height: 118px;
 
-    background: linear-gradient(160deg, #823235, #b53d46);
-    color: #f7dfc2;
-
-    border: 2px solid rgba(246, 121, 122, 0.8);
-    border-radius: 24px;
-    box-shadow:
-        0 0 24px rgba(214, 73, 87, 0.48),
-        inset 0 -8px 0 rgba(71, 22, 26, 0.28);
-
     font-size: 44px;
     font-weight: 900;
     letter-spacing: 2px;
-
-    cursor: pointer;
-}
-
-.svintus-btn:hover {
-    filter: brightness(1.08);
 }
 
 /* Unified button and settings styling */
