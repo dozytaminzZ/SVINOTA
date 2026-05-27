@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Присоединиться к игре - SVINOTA{% endblock %}
+
+{% block content %}
+<div class="page create-game-page">
+    <a class="back-link create-back-link" href="{{ url_for('index') }}">
+        <span class="back-arrow" aria-hidden="true"></span>
+        Назад
+    </a>
+
+    <main class="create-game-wrap">
+        <section class="create-game-panel" aria-label="Присоединиться к игре">
+            <header class="create-game-header">
+                <h1>Присоединиться к игре</h1>
+                <div class="create-title-decoration" aria-hidden="true">
+                    <span></span>
+                    <svg viewBox="0 0 32 32">
+                        <path d="M10 6h10l2 18H12L10 6z"></path>
+                        <path d="M14 5h10l-3 18"></path>
+                    </svg>
+                    <span></span>
+                </div>
+            </header>
+
+            <form class="create-game-body join-game-body" method="post" action="{{ url_for('lobby.join_game') }}">
+                <section class="create-settings">
+                    <div class="create-block">
+                        <h2>ID лобби</h2>
+
+                        <div class="profile-field">
+                            <span class="field-icon field-icon-lobby" aria-hidden="true"></span>
+                            <input
+                                name="lobby_id"
+                                type="text"
+                                placeholder="SVN-7K3B"
+                                value="{{ lobby_id }}"
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <p>Введите код, который отправил вам друг</p>
+                    </div>
+
+                    <div class="create-divider"></div>
+
+                    <div class="create-block">
+                        <h2>Ваш ник</h2>
+
+                        <div class="profile-field">
+                            <span class="field-icon field-icon-user" aria-hidden="true"></span>
+                            <input
+                                name="nickname"
+                                type="text"
+                                placeholder="Введите ник"
+                                value="{{ nickname }}"
+                                autocomplete="off"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="create-divider"></div>
+
+                    {% if error %}
+                        <p class="form-error">{{ error }}</p>
+                    {% endif %}
+
+                    <button class="start-game-btn" type="submit">Присоединиться</button>
+                </section>
+            </form>
+        </section>
+    </main>
+</div>
+{% endblock %}

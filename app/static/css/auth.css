@@ -229,7 +229,7 @@
 
 @media (max-width: 700px) {
     body {
-        background-size: 340px auto;
+        background-size: cover;
     }
 
     .logo-composition {

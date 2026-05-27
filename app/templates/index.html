@@ -12,15 +12,21 @@
             <span class="profile-icon" aria-hidden="true"></span>
         </a>
     {% else %}
-        <a class="auth-top-btn" href="/auth/">Авторизация</a>
+        <a class="auth-top-btn" href="/auth/">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path>
+                <path d="M4 21a8 8 0 0 1 16 0"></path>
+            </svg>
+            Авторизация
+        </a>
     {% endif %}
 
     <main class="index-content">
-        <div class="logo-composition">
+        <div class="logo-composition index-logo-composition">
             <div class="arc-logo arc-logo-main">
-                <svg viewBox="0 0 420 250" xmlns="http://www.w3.org/2000/svg" aria-label="SVINOTA ONLINE">
+                <svg viewBox="0 0 760 430" xmlns="http://www.w3.org/2000/svg" aria-label="SVINOTA ONLINE">
                     <defs>
-                        <path id="mainArcPath" d="M 35 205 A 175 175 0 0 1 385 205" />
+                        <path id="mainArcPath" d="M 102 298 A 288 288 0 0 1 658 298" />
                     </defs>
 
                     <text>
@@ -31,6 +37,9 @@
                 </svg>
             </div>
 
+            <span class="logo-side-line logo-line-left" aria-hidden="true"></span>
+            <span class="logo-side-line logo-line-right" aria-hidden="true"></span>
+
             <img
                 class="main-avatar"
                 src="{{ url_for('static', filename='img/logo.png') }}"
@@ -39,11 +48,13 @@
         </div>
 
         <div class="main-actions">
-            <a class="game-btn" href="#">
+            <a class="game-btn index-action-btn" href="{{ url_for('lobby.create_game') }}">
+                <span class="index-action-icon plus-icon" aria-hidden="true"></span>
                 Создать игру
             </a>
 
-            <a class="game-btn" href="#">
+            <a class="game-btn index-action-btn" href="{{ url_for('lobby.join_game') }}">
+                <span class="index-action-icon users-icon" aria-hidden="true"></span>
                 Присоединиться
             </a>
         </div>
