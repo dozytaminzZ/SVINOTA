@@ -1,0 +1,69 @@
+{% set info_cards = [
+    {
+        'title': 'Обычная карта',
+        'image': 'cards/blue/blue7.jpg',
+        'effect': 'Кладется на кон при совпадении по цвету или числу.'
+    },
+    {
+        'title': 'Захрапин',
+        'image': 'cards/blue/blue8.jpg',
+        'effect': 'Следующий игрок пропускает ход.'
+    },
+    {
+        'title': 'Перехрюк',
+        'image': 'cards/blue/blue9.jpg',
+        'effect': 'Меняет направление движения хода.'
+    },
+    {
+        'title': 'Хлопкопыт',
+        'image': 'cards/blue/blue10.jpg',
+        'effect': 'Все игроки кладут ладонь на колоду; последний берет 2 карты.'
+    },
+    {
+        'title': 'Хапеж',
+        'image': 'cards/blue/blue11.jpg',
+        'effect': 'Следующий игрок берет 3 карты из колоды и пропускает ход.'
+    },
+    {
+        'title': 'Полисвин',
+        'image': 'cards/grey/grey0.jpg',
+        'effect': 'Можно выложить на любую карту и объявить любой цвет; следующий игрок обязан сыграть карту этого цвета.'
+    }
+] %}
+
+<div class="cards-modal-overlay" id="cards-modal" hidden>
+    <section class="cards-panel cards-modal-panel" role="dialog" aria-modal="true" aria-labelledby="cards-modal-title">
+        <button class="options-close cards-modal-close" type="button" aria-label="Закрыть окно о картах"></button>
+
+        <header class="cards-header">
+            <h2 id="cards-modal-title">О картах</h2>
+            <div class="create-title-decoration" aria-hidden="true">
+                <span></span>
+                <svg viewBox="0 0 32 32">
+                    <path d="M10 6h10l2 18H12L10 6z"></path>
+                    <path d="M14 5h10l-3 18"></path>
+                </svg>
+                <span></span>
+            </div>
+        </header>
+
+        <div class="cards-info-grid">
+            {% for card in info_cards %}
+                <button class="card-info-tile" type="button" aria-pressed="false">
+                    <span class="card-info-inner">
+                        <span class="card-info-face card-info-front">
+                            <img src="{{ url_for('static', filename=card.image) }}" alt="{{ card.title }}">
+                            <strong>{{ card.title }}</strong>
+                        </span>
+
+                        <span class="card-info-face card-info-back">
+                            <strong>{{ card.title }}</strong>
+                            <span class="card-info-divider" aria-hidden="true"></span>
+                            <span class="card-info-effect">Эффект: {{ card.effect }}</span>
+                        </span>
+                    </span>
+                </button>
+            {% endfor %}
+        </div>
+    </section>
+</div>

@@ -2,18 +2,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const optionsTrigger = document.querySelector('.info-btn, .table-menu-btn');
     const optionsOverlay = document.getElementById('options-overlay');
     const optionsClose = document.querySelector('.options-close');
+    const cardsOpenButtons = document.querySelectorAll('[data-cards-open]');
+    const cardsOverlay = document.getElementById('cards-modal');
+    const cardsClose = document.querySelector('.cards-modal-close');
     const soundToggle = document.querySelector('[data-sound-toggle]');
     const copyCodeButton = document.querySelector('[data-copy-code]');
+    let lastCardsTrigger = null;
+
+    const closeOptions = () => {
+        if (optionsOverlay) {
+            optionsOverlay.hidden = true;
+        }
+
+        if (optionsTrigger) {
+            optionsTrigger.focus();
+        }
+    };
 
     if (optionsTrigger && optionsOverlay && optionsClose) {
         const openOptions = () => {
             optionsOverlay.hidden = false;
             optionsClose.focus();
-        };
-
-        const closeOptions = () => {
-            optionsOverlay.hidden = true;
-            optionsTrigger.focus();
         };
 
         optionsTrigger.addEventListener('click', openOptions);
@@ -25,12 +34,53 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && !optionsOverlay.hidden) {
+    }
+
+    const closeCardsModal = () => {
+        if (!cardsOverlay) {
+            return;
+        }
+
+        cardsOverlay.hidden = true;
+
+        if (lastCardsTrigger) {
+            lastCardsTrigger.focus();
+        }
+    };
+
+    if (cardsOverlay && cardsClose) {
+        cardsOpenButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                lastCardsTrigger = button;
                 closeOptions();
+                cardsOverlay.hidden = false;
+                cardsClose.focus();
+            });
+        });
+
+        cardsClose.addEventListener('click', closeCardsModal);
+
+        cardsOverlay.addEventListener('click', (event) => {
+            if (event.target === cardsOverlay) {
+                closeCardsModal();
             }
         });
     }
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') {
+            return;
+        }
+
+        if (cardsOverlay && !cardsOverlay.hidden) {
+            closeCardsModal();
+            return;
+        }
+
+        if (optionsOverlay && !optionsOverlay.hidden) {
+            closeOptions();
+        }
+    });
 
     if (soundToggle) {
         soundToggle.addEventListener('click', () => {
@@ -59,12 +109,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    document.querySelectorAll('.card-info-tile').forEach((cardTile) => {
+        cardTile.addEventListener('click', () => {
+            const isFlipped = cardTile.classList.toggle('is-flipped');
+            cardTile.setAttribute('aria-pressed', String(isFlipped));
+        });
+    });
+
     const gamePage = document.querySelector('.game-page');
-    const discardZone = document.querySelector('.discard-zone');
+    const playZone = document.querySelector('.play-zone');
+    const deckZone = document.querySelector('.deck-zone');
+    const deckCard = document.querySelector('.deck-card');
+    const playerHand = document.querySelector('.player-hand');
     const svintusButton = document.querySelector('.svintus-btn');
     const roomId = gamePage?.dataset.roomId;
+    const demoDeckCards = [
+        { id: 'draw-red-4', src: '/static/cards/red/red4.jpg', name: 'Красная 4', color: 'red', type: 'number' },
+        { id: 'draw-yellow-7', src: '/static/cards/yellow/yellow7.jpg', name: 'Желтая 7', color: 'yellow', type: 'number' },
+        { id: 'draw-blue-8', src: '/static/cards/blue/blue8.jpg', name: 'Синяя 8', color: 'blue', type: 'number' },
+        { id: 'draw-green-11', src: '/static/cards/green/green11.jpg', name: 'Зеленая спецкарта', color: 'green', type: 'special' },
+        { id: 'draw-grey-0', src: '/static/cards/grey/grey0.jpg', name: 'Полисвин', color: 'grey', type: 'special' }
+    ];
 
     let socket = null;
+    let drawIndex = 0;
+    let isDrawingCard = false;
 
     if (window.io && gamePage && roomId) {
         socket = io();
@@ -99,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
             /*
                 Позже сюда нужно добавить нормальную перерисовку:
                 - renderHand(state.viewer_hand)
-                - renderTopDiscard(state.top_discard)
+                - renderTopCard(state.top_card)
                 - renderPlayers(state.players)
                 - renderTurnStatus(state.current_player_id)
 
@@ -112,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             /*
                 Здесь позже можно сделать анимацию:
-                карта летит от аватара другого игрока к discard-zone.
+                карта летит от аватара другого игрока к play-zone.
             */
         });
     }
@@ -143,9 +212,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return ghost;
     }
 
-    function animateGhostToDiscard(ghost) {
+    function createDeckGhost() {
+        if (!deckCard) {
+            return null;
+        }
+
+        const rect = deckCard.getBoundingClientRect();
+        const ghost = deckCard.cloneNode(true);
+
+        ghost.classList.remove('deck-card');
+        ghost.classList.add('draw-card-ghost');
+
+        ghost.style.left = `${rect.left}px`;
+        ghost.style.top = `${rect.top}px`;
+        ghost.style.width = `${rect.width}px`;
+        ghost.style.height = `${rect.height}px`;
+
+        document.body.appendChild(ghost);
+
+        return ghost;
+    }
+
+    function animateGhostToPlayZone(ghost) {
         return new Promise((resolve) => {
-            const target = document.querySelector('.discard-slot');
+            const target = document.querySelector('.play-slot');
 
             if (!target) {
                 ghost.remove();
@@ -195,19 +285,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!cardId) {
             console.error('card_id is missing on card element');
-            card.classList.remove('is-origin-hidden');
             return;
         }
 
         if (!socket) {
             console.warn('Socket.IO is not connected. Front animation works, but backend event was not sent.');
-            card.classList.remove('is-origin-hidden');
             return;
         }
 
         if (!roomId) {
             console.error('room_id is missing');
-            card.classList.remove('is-origin-hidden');
             return;
         }
 
@@ -218,8 +305,127 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function initCardDrag() {
-        document.querySelectorAll('.play-card').forEach((card) => {
+    function removePlayedCard(card) {
+        card.remove();
+        updateHandLayout();
+        updateYouCardsCount();
+    }
+
+    function updateHandLayout() {
+        if (!playerHand) {
+            return;
+        }
+
+        const cards = Array.from(playerHand.querySelectorAll('.play-card'));
+        const spacing = cards.length > 1 ? Math.min(46, 900 / (cards.length - 1)) : 0;
+        const center = (cards.length - 1) / 2;
+
+        cards.forEach((card, index) => {
+            card.style.setProperty('--x', `${(index - center) * spacing}px`);
+        });
+    }
+
+    function updateYouCardsCount() {
+        if (!playerHand) {
+            return;
+        }
+
+        const counter = document.querySelector('.you-badge span');
+
+        if (counter) {
+            counter.textContent = `${playerHand.querySelectorAll('.play-card').length} карт`;
+        }
+    }
+
+    function createDrawnCard() {
+        const cardData = demoDeckCards[drawIndex % demoDeckCards.length];
+        const card = document.createElement('button');
+        const image = document.createElement('img');
+
+        drawIndex += 1;
+
+        card.className = 'play-card is-origin-hidden';
+        card.type = 'button';
+        card.dataset.cardId = `${cardData.id}-${Date.now()}`;
+        card.dataset.cardColor = cardData.color;
+        card.dataset.cardType = cardData.type;
+
+        image.src = cardData.src;
+        image.alt = cardData.name;
+
+        card.appendChild(image);
+
+        return card;
+    }
+
+    function animateDeckGhostToCard(ghost, card) {
+        return new Promise((resolve) => {
+            if (!ghost || !card) {
+                resolve();
+                return;
+            }
+
+            const targetRect = card.getBoundingClientRect();
+            const ghostRect = ghost.getBoundingClientRect();
+            const left = targetRect.left + targetRect.width / 2 - ghostRect.width / 2;
+            const top = targetRect.top + targetRect.height / 2 - ghostRect.height / 2;
+
+            ghost.classList.add('is-drawing');
+            ghost.style.left = `${left}px`;
+            ghost.style.top = `${top}px`;
+            ghost.style.width = `${targetRect.width}px`;
+            ghost.style.height = `${targetRect.height}px`;
+            ghost.style.transform = 'rotate(0deg) scale(1)';
+            ghost.style.opacity = '0.72';
+
+            window.setTimeout(() => {
+                ghost.remove();
+                resolve();
+            }, 330);
+        });
+    }
+
+    function emitDrawCard() {
+        if (!socket || !roomId) {
+            return;
+        }
+
+        socket.emit('game:draw', {
+            room_id: roomId
+        });
+    }
+
+    async function drawCardFromDeck() {
+        if (!playerHand || isDrawingCard) {
+            return;
+        }
+
+        isDrawingCard = true;
+        deckZone?.classList.add('is-drawing');
+
+        const ghost = createDeckGhost();
+        const card = createDrawnCard();
+
+        playerHand.appendChild(card);
+        bindCardDrag(card);
+        updateHandLayout();
+        updateYouCardsCount();
+
+        await animateDeckGhostToCard(ghost, card);
+
+        card.classList.remove('is-origin-hidden');
+        deckZone?.classList.remove('is-drawing');
+        emitDrawCard();
+        isDrawingCard = false;
+    }
+
+    function bindCardDrag(card) {
+        if (card.dataset.dragReady === 'true') {
+            return;
+        }
+
+        card.dataset.dragReady = 'true';
+
             let ghost = null;
             let startX = 0;
             let startY = 0;
@@ -263,13 +469,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 ghost.style.left = `${event.clientX - shiftX}px`;
                 ghost.style.top = `${event.clientY - shiftY}px`;
 
-                if (discardZone) {
+                if (playZone) {
                     const isOverDiscard = rectsIntersect(
                         ghost.getBoundingClientRect(),
-                        discardZone.getBoundingClientRect()
+                        playZone.getBoundingClientRect()
                     );
 
-                    discardZone.classList.toggle('is-drop-target', isOverDiscard);
+                    playZone.classList.toggle('is-drop-target', isOverDiscard);
                 }
             });
 
@@ -288,21 +494,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 card.classList.remove('is-selected');
 
-                if (!ghost || !discardZone) {
+                if (!ghost || !playZone) {
                     card.classList.remove('is-origin-hidden');
                     return;
                 }
 
                 const isOverDiscard = rectsIntersect(
                     ghost.getBoundingClientRect(),
-                    discardZone.getBoundingClientRect()
+                    playZone.getBoundingClientRect()
                 );
 
-                discardZone.classList.remove('is-drop-target');
+                playZone.classList.remove('is-drop-target');
 
                 if (isOverDiscard) {
-                    await animateGhostToDiscard(ghost);
+                    await animateGhostToPlayZone(ghost);
                     emitPlayCard(card);
+                    removePlayedCard(card);
                     return;
                 }
 
@@ -313,17 +520,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 isDragging = false;
                 card.classList.remove('is-selected');
 
-                if (discardZone) {
-                    discardZone.classList.remove('is-drop-target');
+                if (playZone) {
+                    playZone.classList.remove('is-drop-target');
                 }
 
                 if (ghost) {
                     await animateGhostBack(ghost, card);
                 }
             });
+    }
+
+    function initCardDrag() {
+        document.querySelectorAll('.play-card').forEach((card) => {
+            bindCardDrag(card);
         });
     }
 
+    if (deckZone) {
+        deckZone.addEventListener('click', drawCardFromDeck);
+        deckZone.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') {
+                return;
+            }
+
+            event.preventDefault();
+            drawCardFromDeck();
+        });
+    }
+
+    updateHandLayout();
     initCardDrag();
 
     if (svintusButton) {

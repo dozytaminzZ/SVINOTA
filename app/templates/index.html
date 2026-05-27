@@ -69,10 +69,12 @@
             <div class="options-actions">
                 <button class="options-btn" type="button" data-sound-toggle>Выключить звук</button>
                 <button class="options-btn" type="button">Как играть</button>
-                <button class="options-btn" type="button">О картах</button>
+                <button class="options-btn" type="button" data-cards-open>О картах</button>
             </div>
         </section>
     </div>
+
+    {% include "_cards_modal.html" %}
 
 </div>
 {% endblock %}

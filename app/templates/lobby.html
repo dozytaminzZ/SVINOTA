@@ -90,19 +90,19 @@
         </aside>
 
         <section class="game-table">
-            <div class="deck-zone" data-deck-zone="deck">
+            <div class="deck-zone" data-deck-zone="deck" role="button" tabindex="0" aria-label="Взять карту из колоды">
                 <div class="deck-card card-back">
                     <span>S</span>
                 </div>
                 <p>Колода</p>
             </div>
 
-            <div class="discard-zone" data-drop-zone="discard">
-                <div class="discard-slot">↻</div>
-                <p>Сброс</p>
+            <div class="play-zone" data-play-zone="table">
+                <div class="play-slot">+</div>
+                <p>Игровой кон</p>
             </div>
 
-            <div class="direction-arrow" aria-hidden="true">↷</div>
+            <div class="direction-arrow" aria-hidden="true">↻</div>
         </section>
 
         <section class="player-hand" aria-label="Ваши карты">
@@ -145,10 +145,11 @@
             <div class="options-actions">
                 <button class="options-btn" type="button" data-sound-toggle>Выключить звук</button>
                 <button class="options-btn" type="button">Как играть</button>
-                <button class="options-btn" type="button">О картах</button>
+                <button class="options-btn" type="button" data-cards-open>О картах</button>
                 <a class="options-btn" href="/">Выйти в меню</a>
             </div>
         </section>
     </div>
+    {% include "_cards_modal.html" %}
 </div>
 {% endblock %}
