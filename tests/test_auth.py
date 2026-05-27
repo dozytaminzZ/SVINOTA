@@ -71,3 +71,18 @@ def test_profile_authorized(client):
     res = client.get('/auth/profile')
     assert res.status_code == 200
     assert 'user' in res.json
+
+def test_page_profile_guest_redirects_to_auth(client):
+    client.post('/auth/guest')
+    res = client.get('/profile')
+    assert res.status_code == 302
+    assert '/auth/' in res.location
+
+def test_page_profile_registered_user_opens(client):
+    client.post('/auth/register', json={
+        'username': 'profileuser',
+        'password': 'password123'
+    })
+
+    res = client.get('/profile')
+    assert res.status_code == 200

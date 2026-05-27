@@ -85,7 +85,7 @@ def _ensure_guest_user(base_username='guest'):
 
     username = _unique_guest_username(base_username)
 
-    user = User(username=username)
+    user = User(username=username, is_guest=True)
     db.session.add(user)
     db.session.commit()
 

@@ -1,6 +1,6 @@
 import uuid
 from flask import Flask, render_template, request, redirect, url_for
-from flask_login import login_required
+from flask_login import current_user, login_required
 
 from app.extensions import db, login_manager, migrate, socketio
 from config.settings import Config

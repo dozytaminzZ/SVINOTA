@@ -12,6 +12,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     wins = db.Column(db.Integer, default=0)
     losses = db.Column(db.Integer, default=0)
+    is_guest = db.Column(db.Boolean, default=False, nullable=False)
 
     def get_id(self):
         return str(self.id)
