@@ -1,6 +1,5 @@
 import uuid
-
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from flask_login import login_required
 
 from app.extensions import db, login_manager, migrate, socketio
@@ -60,8 +59,9 @@ def create_app(config_class=Config):
         return render_template('index.html')
 
     @app.route('/profile')
-    @login_required
     def profile():
-        return render_template('profile.html')
+        if not current_user.is_authenticated or getattr(current_user, 'is_guest', False):
+            return redirect(url_for('auth.index'))
 
+        return render_template('profile.html')
     return app

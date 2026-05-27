@@ -7,7 +7,7 @@
 
     <button class="info-btn" type="button" aria-label="Открыть настройки">i</button>
 
-    {% if current_user.is_authenticated %}
+    {% if current_user.is_authenticated and not current_user.is_guest %}
         <a class="profile-top-btn" href="/profile" aria-label="Профиль">
             <span class="profile-icon" aria-hidden="true"></span>
         </a>
