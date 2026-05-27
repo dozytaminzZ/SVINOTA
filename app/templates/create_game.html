@@ -4,6 +4,12 @@
 
 {% block content %}
 <div class="page create-game-page">
+    {% if start_error %}
+        <div class="error-stack">
+            <div class="error-message">{{ start_error }}</div>
+        </div>
+    {% endif %}
+
     <a class="back-link create-back-link" href="/">
         <span class="back-arrow" aria-hidden="true"></span>
         Назад
@@ -13,6 +19,7 @@
         <section class="create-game-panel" aria-label="Создание игры">
             <header class="create-game-header">
                 <h1>Создание игры</h1>
+
                 <div class="create-title-decoration" aria-hidden="true">
                     <span></span>
                     <svg viewBox="0 0 32 32">
@@ -26,18 +33,15 @@
             <form class="create-game-body" method="post" action="{{ url_for('lobby.create_game') }}">
                 <section class="create-settings">
                     <div class="create-block">
-                        <h2>Число игроков</h2>
+                        <h2>Игроки</h2>
 
-                        <div class="player-count-options" role="group" aria-label="Число игроков">
-                            {% for count in range(2, 7) %}
-                                <label class="count-option{% if count == max_players %} is-selected{% endif %}">
-                                    <input type="radio" name="max_players" value="{{ count }}" {% if count == max_players %}checked{% endif %}>
-                                    <span>{{ count }}</span>
-                                </label>
-                            {% endfor %}
+                        <div class="player-count-options" role="group" aria-label="Игроки в комнате">
+                            <label class="count-option is-selected">
+                                <span>{{ players_count }}</span>
+                            </label>
                         </div>
 
-                        <p>Рекомендуется: 4-6 игроков</p>
+                        <p>Игра начнётся с теми,<br>кто находится в комнате</p>
                     </div>
 
                     <div class="create-divider"></div>
@@ -47,7 +51,13 @@
 
                         <div class="invite-code">
                             <span>{{ invite_code }}</span>
-                            <button class="copy-code-btn" type="button" data-copy-code="{{ invite_code }}" aria-label="Скопировать ID игры">
+
+                            <button
+                                class="copy-code-btn"
+                                type="button"
+                                data-copy-code="{{ invite_code }}"
+                                aria-label="Скопировать ID игры"
+                            >
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M8 8h10v12H8z"></path>
                                     <path d="M5 16H3V4h10v2"></path>
@@ -70,24 +80,38 @@
                 <section class="lobby-players">
                     <div class="lobby-heading">
                         <h2>Игроки в лобби</h2>
-                        <span>1/{{ max_players }}</span>
+                        <span>{{ players_count }}/{{ room.max_players }}</span>
                     </div>
 
                     <div class="lobby-list">
-                        <article class="lobby-player is-creator">
-                            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="">
-                            <div>
-                                <strong>{{ creator_name }}</strong>
-                                <span>Создатель</span>
-                            </div>
-                            <i aria-hidden="true"></i>
-                        </article>
+                        {% for seat in seats %}
+                            {% if seat.is_empty %}
+                                <article class="lobby-player is-empty">
+                                    <span class="empty-avatar" aria-hidden="true"></span>
+                                    <p>Ожидает игрока</p>
+                                </article>
+                            {% else %}
+                                <article class="lobby-player{% if seat.is_owner %} is-creator{% endif %}">
+                                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="">
 
-                        {% for slot in range(max_players - 1) %}
-                            <article class="lobby-player is-empty">
-                                <span class="empty-avatar" aria-hidden="true"></span>
-                                <p>Ожидает игрока</p>
-                            </article>
+                                    <div>
+                                        <strong>
+                                            {{ seat.name }}
+                                            {% if seat.is_current %}
+                                                <span style="opacity: .75;">(вы)</span>
+                                            {% endif %}
+                                        </strong>
+
+                                        {% if seat.is_owner %}
+                                            <span>Создатель</span>
+                                        {% else %}
+                                            <span>Игрок</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <i aria-hidden="true"></i>
+                                </article>
+                            {% endif %}
                         {% endfor %}
                     </div>
                 </section>
@@ -96,7 +120,7 @@
 
         <p class="create-note">
             <span aria-hidden="true">▣</span>
-            Игра начнется, когда все игроки присоединятся
+            Игра начнётся, когда в комнате будет минимум 2 игрока
         </p>
     </main>
 </div>

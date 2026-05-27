@@ -6,6 +6,7 @@ from flask import Blueprint, redirect, render_template, request, url_for
 from flask_login import current_user, login_user
 
 from app.extensions import db
+from app.game.service import GameServiceError, create_game_for_room
 from app.models import Room, RoomPlayer, User
 
 
@@ -65,6 +66,7 @@ def _unique_invite_code(length=8):
         if Room.query.filter_by(invite_code=code).first() is None:
             return code
 
+
 def _unique_guest_username(base='guest'):
     base = (base or 'guest').strip()[:45] or 'guest'
     suffix = uuid.uuid4().hex[:6]
@@ -77,11 +79,11 @@ def _unique_guest_username(base='guest'):
     return candidate
 
 
-def _ensure_guest_user():
+def _ensure_guest_user(base_username='guest'):
     if current_user.is_authenticated:
         return current_user
 
-    username = _unique_guest_username('guest')
+    username = _unique_guest_username(base_username)
 
     user = User(username=username)
     db.session.add(user)
@@ -90,6 +92,7 @@ def _ensure_guest_user():
     login_user(user)
 
     return user
+
 
 def _room_counts(room_id):
     players_count = RoomPlayer.query.filter_by(room_id=room_id).count()
@@ -112,6 +115,53 @@ def _room_payload(room, players_count=None, ready_count=None):
         'ready_count': ready_count,
         'is_private': room.is_private
     }
+
+
+def _room_seats(room):
+    members = (
+        RoomPlayer.query
+        .filter_by(room_id=room.id)
+        .order_by(RoomPlayer.seat_index)
+        .all()
+    )
+
+    members_by_seat = {member.seat_index: member for member in members}
+
+    user_ids = [member.user_id for member in members]
+    users_by_id = {}
+
+    if user_ids:
+        users = User.query.filter(User.id.in_(user_ids)).all()
+        users_by_id = {user.id: user for user in users}
+
+    seats = []
+
+    for seat_index in range(room.max_players):
+        member = members_by_seat.get(seat_index)
+
+        if member is None:
+            seats.append({
+                'seat_index': seat_index,
+                'is_empty': True,
+                'name': None,
+                'is_owner': False,
+                'is_current': False,
+                'is_ready': False,
+            })
+            continue
+
+        user = users_by_id.get(member.user_id)
+
+        seats.append({
+            'seat_index': seat_index,
+            'is_empty': False,
+            'name': user.username if user else 'Игрок',
+            'is_owner': member.user_id == room.owner_id,
+            'is_current': current_user.is_authenticated and member.user_id == current_user.id,
+            'is_ready': member.is_ready,
+        })
+
+    return seats
 
 
 def _create_room_for_current_user(max_players=6, is_private=False):
@@ -147,14 +197,13 @@ def _create_room_for_current_user(max_players=6, is_private=False):
 
 
 @lobby_bp.route('/create', methods=['GET', 'POST'])
-
 def create_game():
-    creator_name = current_user.username if current_user.is_authenticated else 'Главный свинтус'
     max_players = 6
 
     if request.method == 'POST':
         if _is_json_request():
-            
+            if not current_user.is_authenticated:
+                return _json_error('authentication required', 401)
 
             data = _get_request_data()
             max_players = data.get('max_players', 6)
@@ -186,19 +235,79 @@ def create_game():
 
         _ensure_guest_user()
 
-        max_players = get_max_players_from_form()
-        room, _ = _create_room_for_current_user(
-            max_players=max_players,
-            is_private=False
-        )
+        existing_membership = RoomPlayer.query.filter_by(user_id=current_user.id).first()
+        room = None
+
+        if existing_membership is not None:
+            room = db.session.get(Room, existing_membership.room_id)
+
+        if room is None:
+            room, _ = _create_room_for_current_user(
+                max_players=6,
+                is_private=False
+            )
+
+        players_count, ready_count = _room_counts(room.id)
+        seats = _room_seats(room)
+
+        if players_count < 2:
+            return render_template(
+                'create_game.html',
+                creator_name=current_user.username,
+                invite_code=room.invite_code,
+                max_players=room.max_players,
+                room=room,
+                seats=seats,
+                players_count=players_count,
+                ready_count=ready_count,
+                start_error='Нельзя начать игру одному. Нужен минимум 2 игрока.',
+            ), 400
+
+        try:
+            create_game_for_room(room.id)
+        except GameServiceError as error:
+            if error.code != 'game_exists':
+                return render_template(
+                    'create_game.html',
+                    creator_name=current_user.username,
+                    invite_code=room.invite_code,
+                    max_players=room.max_players,
+                    room=room,
+                    seats=seats,
+                    players_count=players_count,
+                    ready_count=ready_count,
+                    start_error=error.args[0],
+                ), error.status_code
 
         return redirect(url_for('lobby.game_table', room_id=str(room.id)))
 
+    _ensure_guest_user()
+
+    existing_membership = RoomPlayer.query.filter_by(user_id=current_user.id).first()
+    room = None
+
+    if existing_membership is not None:
+        room = db.session.get(Room, existing_membership.room_id)
+
+    if room is None:
+        room, _ = _create_room_for_current_user(
+            max_players=6,
+            is_private=False
+        )
+
+    seats = _room_seats(room)
+    players_count, ready_count = _room_counts(room.id)
+
     return render_template(
         'create_game.html',
-        creator_name=creator_name,
-        invite_code='SVN-7K3B',
-        max_players=max_players,
+        creator_name=current_user.username,
+        invite_code=room.invite_code,
+        max_players=room.max_players,
+        room=room,
+        seats=seats,
+        players_count=players_count,
+        ready_count=ready_count,
+        start_error=None,
     )
 
 
@@ -280,10 +389,52 @@ def join_game():
 
         if not lobby_id:
             error = 'Укажите ID лобби'
-        elif not nickname:
-            error = 'Укажите ник'
         else:
-            return redirect(url_for('lobby.game_table', room_id=lobby_id, nickname=nickname))
+            room = None
+
+            invite_code = lobby_id.upper()
+            room = Room.query.filter_by(invite_code=invite_code).first()
+
+            if room is None:
+                try:
+                    room_uuid = uuid.UUID(lobby_id)
+                    room = db.session.get(Room, room_uuid)
+                except ValueError:
+                    room = None
+
+            if room is None:
+                error = 'Комната не найдена'
+            elif room.status != 'waiting':
+                error = 'Комната уже недоступна'
+            else:
+                _ensure_guest_user(nickname or 'guest')
+
+                existing_membership = RoomPlayer.query.filter_by(user_id=current_user.id).first()
+
+                if existing_membership is not None:
+                    if existing_membership.room_id == room.id:
+                        return redirect(url_for('lobby.create_game'))
+
+                    error = 'Вы уже находитесь в другой комнате'
+                else:
+                    current_players = RoomPlayer.query.filter_by(room_id=room.id).all()
+
+                    if len(current_players) >= room.max_players:
+                        error = 'Комната заполнена'
+                    else:
+                        used_seats = {player.seat_index for player in current_players}
+                        seat_index = next(index for index in range(room.max_players) if index not in used_seats)
+
+                        member = RoomPlayer(
+                            room_id=room.id,
+                            user_id=current_user.id,
+                            seat_index=seat_index
+                        )
+
+                        db.session.add(member)
+                        db.session.commit()
+
+                        return redirect(url_for('lobby.create_game'))
 
     return render_template(
         'join_game.html',
@@ -304,6 +455,12 @@ def game_table():
             room = db.session.get(Room, room_uuid)
         except ValueError:
             room = None
+
+    if room is None:
+        return redirect(url_for('lobby.create_game'))
+
+    if room.status == 'waiting':
+        return redirect(url_for('lobby.create_game'))
 
     return render_template('lobby.html', room=room)
 
