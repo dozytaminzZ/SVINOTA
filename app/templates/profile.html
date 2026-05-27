@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль - SVINOTA{% endblock %}
+
+{% block content %}
+<div class="page profile-page">
+    <a class="back-link profile-back-link" href="/">Назад</a>
+
+    <main class="profile-wrap">
+        <div class="logo-composition profile-logo-composition">
+            <div class="arc-logo arc-logo-profile">
+                <svg viewBox="0 0 420 250" xmlns="http://www.w3.org/2000/svg" aria-label="SVINOTA ONLINE">
+                    <defs>
+                        <path id="profileArcPath" d="M 35 205 A 175 175 0 0 1 385 205" />
+                    </defs>
+
+                    <text>
+                        <textPath href="#profileArcPath" startOffset="50%" text-anchor="middle">
+                            SVINOTA ONLINE
+                        </textPath>
+                    </text>
+                </svg>
+            </div>
+        </div>
+
+        <section class="profile-panel" aria-label="Профиль игрока">
+            <button class="profile-photo-btn" type="button">
+                Загрузить<br>фото
+            </button>
+
+            <div class="profile-fields">
+                <label class="profile-field">
+                    <input type="text" name="name" placeholder="Имя" aria-label="Имя">
+                    <span class="edit-icon" aria-hidden="true"></span>
+                </label>
+
+                <label class="profile-field">
+                    <input type="text" name="login" placeholder="Логин" aria-label="Логин">
+                </label>
+
+                <label class="profile-field">
+                    <input type="text" name="registered_at" placeholder="Дата регистрации" aria-label="Дата регистрации" readonly>
+                </label>
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}
