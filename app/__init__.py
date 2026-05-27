@@ -55,6 +55,10 @@ def create_app(config_class=Config):
     def docs():
         return render_template('docs.html')
 
+    @app.route('/music/dev')
+    def music_dev():
+        return render_template('music_dev.html')
+
     @app.route('/openapi.yaml')
     def openapi_spec():
         return app.send_static_file('openapi.yaml')
