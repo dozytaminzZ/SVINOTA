@@ -135,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let socket = null;
     let drawIndex = 0;
     let isDrawingCard = false;
+    let playedCardIndex = 0;
 
     if (window.io && gamePage && roomId) {
         socket = io();
@@ -255,7 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ghost.style.left = `${left}px`;
             ghost.style.top = `${top}px`;
             ghost.style.transform = 'rotate(0deg) scale(0.92)';
-            ghost.style.opacity = '0.25';
 
             window.setTimeout(() => {
                 ghost.remove();
@@ -325,6 +325,29 @@ document.addEventListener('DOMContentLoaded', () => {
         card.remove();
         updateHandLayout();
         updateYouCardsCount();
+    }
+
+    function placeCardOnTable(card) {
+        const target = document.querySelector('.play-slot');
+
+        if (!target) {
+            return;
+        }
+
+        const tableCard = card.cloneNode(true);
+        const position = Math.floor(Math.random() * 5) + 1;
+
+        playedCardIndex += 1;
+
+        tableCard.classList.remove('play-card', 'is-selected', 'is-origin-hidden');
+        tableCard.classList.add('table-played-card', `table-played-card-${position}`);
+        tableCard.removeAttribute('style');
+        tableCard.removeAttribute('data-drag-ready');
+        tableCard.disabled = true;
+        tableCard.style.zIndex = String(playedCardIndex);
+
+        target.classList.add('has-card');
+        target.appendChild(tableCard);
     }
 
     function updateHandLayout() {
@@ -524,6 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (isOverDiscard) {
                     await animateGhostToPlayZone(ghost);
+                    placeCardOnTable(card);
                     emitPlayCard(card);
                     removePlayedCard(card);
                     return;

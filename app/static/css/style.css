@@ -1508,6 +1508,7 @@ a {
 }
 
 .play-slot {
+    position: relative;
     width: 168px;
     height: 180px;
 
@@ -1522,6 +1523,59 @@ a {
     font-size: 54px;
     line-height: 1;
     box-shadow: 0 0 28px rgba(143, 52, 55, 0.26);
+}
+
+.play-slot.has-card {
+    color: transparent;
+}
+
+.table-played-card {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+
+    width: 116px;
+    height: 176px;
+    padding: 0;
+
+    display: block;
+
+    background: transparent;
+    border: none;
+    border-radius: 14px;
+    box-shadow:
+        0 16px 24px rgba(0, 0, 0, 0.34),
+        0 0 0 1px rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.table-played-card img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+    object-fit: cover;
+}
+
+.table-played-card-1 {
+    transform: translate(-50%, -50%) translate(-10px, 2px) rotate(-7deg);
+}
+
+.table-played-card-2 {
+    transform: translate(-50%, -50%) translate(8px, -4px) rotate(5deg);
+}
+
+.table-played-card-3 {
+    transform: translate(-50%, -50%) translate(-4px, -9px) rotate(-2deg);
+}
+
+.table-played-card-4 {
+    transform: translate(-50%, -50%) translate(12px, 7px) rotate(9deg);
+}
+
+.table-played-card-5 {
+    transform: translate(-50%, -50%) translate(-13px, -3px) rotate(3deg);
 }
 
 .direction-arrow {
