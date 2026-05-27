@@ -3,10 +3,10 @@ import string
 import uuid
 
 from flask import Blueprint, redirect, render_template, request, url_for
-from flask_login import current_user
+from flask_login import current_user, login_user
 
 from app.extensions import db
-from app.models import Room, RoomPlayer
+from app.models import Room, RoomPlayer, User
 
 
 lobby_bp = Blueprint('lobby', __name__)
@@ -65,6 +65,31 @@ def _unique_invite_code(length=8):
         if Room.query.filter_by(invite_code=code).first() is None:
             return code
 
+def _unique_guest_username(base='guest'):
+    base = (base or 'guest').strip()[:45] or 'guest'
+    suffix = uuid.uuid4().hex[:6]
+    candidate = f"{base}-{suffix}"
+
+    while User.query.filter_by(username=candidate).first() is not None:
+        suffix = uuid.uuid4().hex[:6]
+        candidate = f"{base}-{suffix}"
+
+    return candidate
+
+
+def _ensure_guest_user():
+    if current_user.is_authenticated:
+        return current_user
+
+    username = _unique_guest_username('guest')
+
+    user = User(username=username)
+    db.session.add(user)
+    db.session.commit()
+
+    login_user(user)
+
+    return user
 
 def _room_counts(room_id):
     players_count = RoomPlayer.query.filter_by(room_id=room_id).count()
@@ -122,14 +147,14 @@ def _create_room_for_current_user(max_players=6, is_private=False):
 
 
 @lobby_bp.route('/create', methods=['GET', 'POST'])
+
 def create_game():
     creator_name = current_user.username if current_user.is_authenticated else 'Главный свинтус'
     max_players = 6
 
     if request.method == 'POST':
         if _is_json_request():
-            if not current_user.is_authenticated:
-                return _json_error('authentication required', 401)
+            
 
             data = _get_request_data()
             max_players = data.get('max_players', 6)
