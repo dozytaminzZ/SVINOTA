@@ -4,43 +4,53 @@
 
 {% block content %}
 <div class="page profile-page">
-    <a class="back-link profile-back-link" href="/">Назад</a>
+    <a class="back-link profile-back-link" href="/">
+        <span class="back-arrow" aria-hidden="true"></span>
+        Назад
+    </a>
 
     <main class="profile-wrap">
-        <div class="logo-composition profile-logo-composition">
-            <div class="arc-logo arc-logo-profile">
-                <svg viewBox="0 0 420 250" xmlns="http://www.w3.org/2000/svg" aria-label="SVINOTA ONLINE">
-                    <defs>
-                        <path id="profileArcPath" d="M 35 205 A 175 175 0 0 1 385 205" />
-                    </defs>
-
-                    <text>
-                        <textPath href="#profileArcPath" startOffset="50%" text-anchor="middle">
-                            SVINOTA ONLINE
-                        </textPath>
-                    </text>
-                </svg>
-            </div>
-        </div>
-
         <section class="profile-panel" aria-label="Профиль игрока">
+            <header class="profile-header">
+                <span class="profile-title-line" aria-hidden="true"></span>
+                <h1 class="profile-title">Профиль</h1>
+                <span class="profile-title-line" aria-hidden="true"></span>
+            </header>
+
             <button class="profile-photo-btn" type="button">
-                Загрузить<br>фото
+                <span class="profile-photo-icon" aria-hidden="true"></span>
+                <span class="profile-photo-text">Загрузить<br>фото</span>
+                <span class="profile-upload-icon" aria-hidden="true"></span>
             </button>
 
             <div class="profile-fields">
                 <label class="profile-field">
+                    <span class="field-icon field-icon-user" aria-hidden="true"></span>
                     <input type="text" name="name" placeholder="Имя" aria-label="Имя">
-                    <span class="edit-icon" aria-hidden="true"></span>
+                    <svg class="edit-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M14 4l6 6L9 21H3v-6L14 4z"></path>
+                        <path d="M12 6l6 6"></path>
+                    </svg>
                 </label>
 
                 <label class="profile-field">
+                    <span class="field-icon field-icon-user" aria-hidden="true"></span>
                     <input type="text" name="login" placeholder="Логин" aria-label="Логин">
                 </label>
 
                 <label class="profile-field">
+                    <span class="field-icon field-icon-calendar" aria-hidden="true"></span>
                     <input type="text" name="registered_at" placeholder="Дата регистрации" aria-label="Дата регистрации" readonly>
                 </label>
+
+                <a class="game-btn profile-logout-btn" href="/auth/">
+                    <svg class="logout-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <path d="M16 17l5-5-5-5"></path>
+                        <path d="M21 12H9"></path>
+                    </svg>
+                    Выйти
+                </a>
             </div>
         </section>
     </main>
