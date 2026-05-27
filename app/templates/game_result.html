@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Игра завершена - SVINOTA{% endblock %}
+
+{% block content %}
+{# 
+    Ожидаемые данные:
+    winner_name = "Свинка007"
+
+    results = [
+        {"place": 1, "name": "Свинка007", "cards": 0, "score": -63},
+        {"place": 2, "name": "Хрюндель", "cards": 4, "score": 12},
+        {"place": 3, "name": "Пятачок", "cards": 7, "score": 35},
+        {"place": 4, "name": "Свинтус", "cards": 9, "score": 48},
+    ]
+#}
+
+<div class="page results-page">
+    <div class="results-panel">
+
+        <h1 class="results-title">ИГРА ЗАВЕРШЕНА!</h1>
+
+        <div class="results-winner-top">
+            <div class="results-winner-hero">
+                <span class="results-laurel results-laurel-left">❦</span>
+
+                <div class="results-winner-avatar-wrap">
+                    <img
+                        class="results-winner-avatar"
+                        src="{{ url_for('static', filename='img/logo.png') }}"
+                        alt="Победитель"
+                    >
+                    <span class="results-winner-crown">👑</span>
+                </div>
+
+                <span class="results-laurel results-laurel-right">❦</span>
+            </div>
+
+            <div class="results-winner-label">Победитель</div>
+
+            <div class="results-winner-name-box">
+                <span class="results-winner-name">{{ winner_name }}</span>
+            </div>
+        </div>
+
+        <div class="results-table">
+            <div class="results-head">
+                <div>Место</div>
+                <div>Игрок</div>
+                <div>Карты на руке</div>
+                <div>Очки</div>
+            </div>
+
+            <div class="results-body">
+                {% for player in results %}
+                <div class="results-row {% if player.place == 1 %}is-winner{% endif %}">
+                    <div class="results-place-cell">
+                        {% if player.place <= 3 %}
+                            <div class="results-place-badge medal-{{ player.place }}">
+                                <span class="results-place-wreath">❦</span>
+                                <span class="results-place-number">{{ player.place }}</span>
+                            </div>
+                        {% else %}
+                            <div class="results-place-badge plain-place">
+                                <span class="results-place-number">{{ player.place }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="results-player-cell">
+                        <div class="results-player-avatar-wrap {% if player.place == 1 %}gold{% endif %}">
+                            <img
+                                class="results-player-avatar"
+                                src="{{ url_for('static', filename='img/logo.png') }}"
+                                alt="{{ player.name }}"
+                            >
+                        </div>
+
+                        <span class="results-player-name {% if player.place == 1 %}gold-text{% endif %}">
+                            {{ player.name }}
+                        </span>
+                    </div>
+
+                    <div class="results-cards-cell">{{ player.cards }}</div>
+
+                    <div class="results-score-cell {% if player.place == 1 %}gold-text{% endif %}">
+                        {{ player.score }}
+                    </div>
+
+                    {% if player.place == 1 %}
+                    <div class="results-row-crown">👑</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="results-actions">
+            <a href="/lobby/create" class="game-btn results-action-btn">Новая игра</a>
+            <a href="/" class="game-btn results-action-btn">Вернуться в меню</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
