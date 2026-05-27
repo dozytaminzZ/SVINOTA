@@ -489,6 +489,7 @@ a {
 
 .profile-photo-btn {
     grid-area: photo;
+    position: relative;
 
     width: 306px;
     height: 340px;
@@ -509,6 +510,7 @@ a {
     line-height: 1.2;
 
     cursor: pointer;
+    overflow: hidden;
 }
 
 .profile-photo-btn:hover {
@@ -516,8 +518,46 @@ a {
     border-color: #a0a62a;
 }
 
+.profile-photo-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.profile-avatar-preview {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+
+    width: 100%;
+    height: 100%;
+
+    display: none;
+
+    object-fit: cover;
+}
+
+.profile-photo-btn.has-avatar .profile-avatar-preview {
+    display: block;
+}
+
+.profile-photo-btn.has-avatar .profile-photo-icon,
+.profile-photo-btn.has-avatar .profile-photo-text,
+.profile-photo-btn.has-avatar .profile-upload-icon {
+    display: none;
+}
+
 .profile-photo-icon {
     position: relative;
+    z-index: 2;
 
     width: 152px;
     height: 152px;
@@ -562,11 +602,15 @@ a {
 }
 
 .profile-photo-text {
+    position: relative;
+    z-index: 2;
+
     display: block;
 }
 
 .profile-upload-icon {
     position: relative;
+    z-index: 2;
 
     width: 28px;
     height: 28px;

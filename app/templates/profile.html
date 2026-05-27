@@ -17,7 +17,17 @@
                 <span class="profile-title-line" aria-hidden="true"></span>
             </header>
 
-            <button class="profile-photo-btn" type="button">
+            <input
+                class="profile-photo-input"
+                id="profile-avatar-input"
+                type="file"
+                name="avatar"
+                accept=".png,.jpg,.jpeg,image/png,image/jpeg"
+                aria-label="Загрузить фото профиля"
+            >
+
+            <button class="profile-photo-btn" id="profile-avatar-btn" type="button">
+                <img class="profile-avatar-preview" id="profile-avatar-preview" alt="">
                 <span class="profile-photo-icon" aria-hidden="true"></span>
                 <span class="profile-photo-text">Загрузить<br>фото</span>
                 <span class="profile-upload-icon" aria-hidden="true"></span>
@@ -55,4 +65,26 @@
         </section>
     </main>
 </div>
+
+<script>
+    const avatarInput = document.getElementById('profile-avatar-input');
+    const avatarButton = document.getElementById('profile-avatar-btn');
+    const avatarPreview = document.getElementById('profile-avatar-preview');
+
+    avatarButton.addEventListener('click', () => {
+        avatarInput.click();
+    });
+
+    avatarInput.addEventListener('change', () => {
+        const [file] = avatarInput.files;
+
+        if (!file || !['image/png', 'image/jpeg'].includes(file.type)) {
+            avatarInput.value = '';
+            return;
+        }
+
+        avatarPreview.src = URL.createObjectURL(file);
+        avatarButton.classList.add('has-avatar');
+    });
+</script>
 {% endblock %}
