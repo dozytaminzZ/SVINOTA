@@ -11,29 +11,32 @@
 {% set left_cards = 15 %}
 {% set right_cards = 20 %}
 {% set hand_cards = [
-    {'src': 'cards/red/red2.jpg', 'name': 'Красная 2'},
-    {'src': 'cards/yellow/yellow5.jpg', 'name': 'Желтая 5'},
-    {'src': 'cards/blue/blue7.jpg', 'name': 'Синяя 7'},
-    {'src': 'cards/green/green9.jpg', 'name': 'Зеленая 9'},
-    {'src': 'cards/red/red8.jpg', 'name': 'Захрапин'},
-    {'src': 'cards/yellow/yellow10.jpg', 'name': 'Хлопкопыт'},
-    {'src': 'cards/blue/blue11.jpg', 'name': 'Хапеж'},
-    {'src': 'cards/green/green0.jpg', 'name': 'Зеленая 0'},
-    {'src': 'cards/red/red1.jpg', 'name': 'Красная 1'},
-    {'src': 'cards/yellow/yellow6.jpg', 'name': 'Желтая 6'},
-    {'src': 'cards/blue/blue3.jpg', 'name': 'Синяя 3'},
-    {'src': 'cards/green/green4.jpg', 'name': 'Зеленая 4'},
-    {'src': 'cards/red/red10.jpg', 'name': 'Красная спецкарта'},
-    {'src': 'cards/yellow/yellow11.jpg', 'name': 'Желтая спецкарта'},
-    {'src': 'cards/blue/blue8.jpg', 'name': 'Синяя спецкарта'},
-    {'src': 'cards/green/green8.jpg', 'name': 'Зеленая спецкарта'},
-    {'src': 'cards/red/red6.jpg', 'name': 'Красная 6'},
-    {'src': 'cards/yellow/yellow2.jpg', 'name': 'Желтая 2'},
-    {'src': 'cards/blue/blue9.jpg', 'name': 'Синяя 9'},
-    {'src': 'cards/green/green11.jpg', 'name': 'Зеленая спецкарта'},
+    {'id': 'demo-red-2', 'src': 'cards/red/red2.jpg', 'name': 'Красная 2', 'color': 'red', 'type': 'number'},
+    {'id': 'demo-yellow-5', 'src': 'cards/yellow/yellow5.jpg', 'name': 'Желтая 5', 'color': 'yellow', 'type': 'number'},
+    {'id': 'demo-blue-7', 'src': 'cards/blue/blue7.jpg', 'name': 'Синяя 7', 'color': 'blue', 'type': 'number'},
+    {'id': 'demo-green-9', 'src': 'cards/green/green9.jpg', 'name': 'Зеленая 9', 'color': 'green', 'type': 'number'},
+    {'id': 'demo-red-8', 'src': 'cards/red/red8.jpg', 'name': 'Красная 8', 'color': 'red', 'type': 'number'},
+    {'id': 'demo-yellow-10', 'src': 'cards/yellow/yellow10.jpg', 'name': 'Желтая 10', 'color': 'yellow', 'type': 'number'},
+    {'id': 'demo-blue-11', 'src': 'cards/blue/blue11.jpg', 'name': 'Синяя спецкарта', 'color': 'blue', 'type': 'special'},
+    {'id': 'demo-green-0', 'src': 'cards/green/green0.jpg', 'name': 'Зеленая 0', 'color': 'green', 'type': 'number'},
+    {'id': 'demo-red-1', 'src': 'cards/red/red1.jpg', 'name': 'Красная 1', 'color': 'red', 'type': 'number'},
+    {'id': 'demo-yellow-6', 'src': 'cards/yellow/yellow6.jpg', 'name': 'Желтая 6', 'color': 'yellow', 'type': 'number'},
+    {'id': 'demo-blue-3', 'src': 'cards/blue/blue3.jpg', 'name': 'Синяя 3', 'color': 'blue', 'type': 'number'},
+    {'id': 'demo-green-4', 'src': 'cards/green/green4.jpg', 'name': 'Зеленая 4', 'color': 'green', 'type': 'number'},
+    {'id': 'demo-red-10', 'src': 'cards/red/red10.jpg', 'name': 'Красная спецкарта', 'color': 'red', 'type': 'special'},
+    {'id': 'demo-yellow-11', 'src': 'cards/yellow/yellow11.jpg', 'name': 'Желтая спецкарта', 'color': 'yellow', 'type': 'special'},
+    {'id': 'demo-blue-8', 'src': 'cards/blue/blue8.jpg', 'name': 'Синяя 8', 'color': 'blue', 'type': 'number'},
+    {'id': 'demo-green-8', 'src': 'cards/green/green8.jpg', 'name': 'Зеленая 8', 'color': 'green', 'type': 'number'},
+    {'id': 'demo-red-6', 'src': 'cards/red/red6.jpg', 'name': 'Красная 6', 'color': 'red', 'type': 'number'},
+    {'id': 'demo-yellow-2', 'src': 'cards/yellow/yellow2.jpg', 'name': 'Желтая 2', 'color': 'yellow', 'type': 'number'},
+    {'id': 'demo-blue-9', 'src': 'cards/blue/blue9.jpg', 'name': 'Синяя 9', 'color': 'blue', 'type': 'number'},
+    {'id': 'demo-green-11', 'src': 'cards/green/green11.jpg', 'name': 'Зеленая спецкарта', 'color': 'green', 'type': 'special'},
 ] %}
 
-<div class="page game-page">
+<div
+    class="page game-page"
+    data-room-id="{{ room.id if room is defined else request.args.get('room_id', '') }}"
+>
     <button class="table-menu-btn" type="button" aria-label="Открыть настройки">
         <span></span>
         <span></span>
@@ -87,14 +90,14 @@
         </aside>
 
         <section class="game-table">
-            <div class="deck-zone">
+            <div class="deck-zone" data-deck-zone="deck">
                 <div class="deck-card card-back">
                     <span>S</span>
                 </div>
                 <p>Колода</p>
             </div>
 
-            <div class="discard-zone">
+            <div class="discard-zone" data-drop-zone="discard">
                 <div class="discard-slot">↻</div>
                 <p>Сброс</p>
             </div>
@@ -104,7 +107,14 @@
 
         <section class="player-hand" aria-label="Ваши карты">
             {% for card in hand_cards %}
-                <button class="play-card" type="button" style="--x: {{ (loop.index0 - (((hand_cards|length) - 1) / 2)) * 46 }}px">
+                <button
+                    class="play-card"
+                    type="button"
+                    data-card-id="{{ card.id }}"
+                    data-card-color="{{ card.color }}"
+                    data-card-type="{{ card.type }}"
+                    style="--x: {{ (loop.index0 - (((hand_cards|length) - 1) / 2)) * 46 }}px"
+                >
                     <img src="{{ url_for('static', filename=card.src) }}" alt="{{ card.name }}">
                 </button>
             {% endfor %}
