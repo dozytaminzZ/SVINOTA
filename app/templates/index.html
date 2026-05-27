@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page index-page">
 
-    <button class="info-btn" type="button">i</button>
+    <button class="info-btn" type="button" aria-label="Открыть опции">i</button>
 
     <a class="profile-top-btn" href="/profile" aria-label="Профиль">
         <span class="profile-icon" aria-hidden="true"></span>
@@ -44,6 +44,20 @@
             </a>
         </div>
     </main>
+
+    <div class="options-overlay" id="options-overlay" hidden>
+        <section class="options-modal" role="dialog" aria-modal="true" aria-labelledby="options-title">
+            <h2 class="options-title" id="options-title">Опции</h2>
+
+            <button class="options-close" type="button" aria-label="Закрыть опции"></button>
+
+            <div class="options-actions">
+                <button class="options-btn" type="button" data-sound-toggle>Выключить звук</button>
+                <button class="options-btn" type="button">Как играть</button>
+                <button class="options-btn" type="button">О картах</button>
+            </div>
+        </section>
+    </div>
 
 </div>
 {% endblock %}
