@@ -36,7 +36,7 @@
             <div class="profile-fields">
                 <label class="profile-field">
                     <span class="field-icon field-icon-user" aria-hidden="true"></span>
-                    <input type="text" name="name" placeholder="Имя" aria-label="Имя">
+                    <input type="text" name="name" value="{{ current_user.username }}" placeholder="Имя" aria-label="Имя">
                     <svg class="edit-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M14 4l6 6L9 21H3v-6L14 4z"></path>
                         <path d="M12 6l6 6"></path>
@@ -45,7 +45,7 @@
 
                 <label class="profile-field">
                     <span class="field-icon field-icon-user" aria-hidden="true"></span>
-                    <input type="text" name="login" placeholder="Логин" aria-label="Логин">
+                    <input type="text" name="login" value="{{ current_user.username }}" placeholder="Логин" aria-label="Логин">
                 </label>
 
                 <label class="profile-field">
@@ -53,7 +53,7 @@
                     <input type="text" name="registered_at" placeholder="Дата регистрации" aria-label="Дата регистрации" readonly>
                 </label>
 
-                <a class="game-btn profile-logout-btn" href="/auth/">
+                <a class="game-btn profile-logout-btn" href="{{ url_for('auth.logout') }}">
                     <svg class="logout-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                         <path d="M16 17l5-5-5-5"></path>

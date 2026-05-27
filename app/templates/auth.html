@@ -22,7 +22,13 @@
     {% if password_error or nickname_error %}
         <div class="error-stack">
             {% if password_error %}
-                <div class="error-message">Неверно введен пароль!</div>
+                <div class="error-message">
+                    {% if is_register %}
+                        Пароли не совпадают!
+                    {% else %}
+                        Неверный ник или пароль!
+                    {% endif %}
+                </div>
             {% endif %}
 
             {% if nickname_error %}
@@ -46,7 +52,6 @@
                     </text>
                 </svg>
             </div>
-
         </div>
 
         <section class="auth-panel">

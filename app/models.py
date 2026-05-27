@@ -1,8 +1,9 @@
 import uuid
+from flask_login import UserMixin
 from app.extensions import db
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -11,6 +12,9 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     wins = db.Column(db.Integer, default=0)
     losses = db.Column(db.Integer, default=0)
+
+    def get_id(self):
+        return str(self.id)
 
 
 class Room(db.Model):

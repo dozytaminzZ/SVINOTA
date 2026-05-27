@@ -7,9 +7,13 @@
 
     <button class="info-btn" type="button" aria-label="Открыть опции">i</button>
 
-    <a class="profile-top-btn" href="/profile" aria-label="Профиль">
-        <span class="profile-icon" aria-hidden="true"></span>
-    </a>
+    {% if current_user.is_authenticated %}
+        <a class="profile-top-btn" href="/profile" aria-label="Профиль">
+            <span class="profile-icon" aria-hidden="true"></span>
+        </a>
+    {% else %}
+        <a class="auth-top-btn" href="/auth/">Авторизация</a>
+    {% endif %}
 
     <main class="index-content">
         <div class="logo-composition">
