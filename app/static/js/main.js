@@ -22,6 +22,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastHowToTrigger = null;
     let currentHowToSlide = 0;
     let pendingColorChoice = null;
+    const musicApi = window.SvinotaMusic;
+
+    if (musicApi) {
+        musicApi.init({
+            startOnFirstInteraction: true
+        });
+    }
+
+    const updateSoundToggle = () => {
+        if (!soundToggle) {
+            return;
+        }
+
+        if (!musicApi) {
+            return;
+        }
+
+        const isEnabled = musicApi.isEnabled();
+        soundToggle.dataset.muted = String(!isEnabled);
+        soundToggle.textContent = isEnabled ? 'Выключить звук' : 'Включить звук';
+    };
 
     const closeOptions = () => {
         if (optionsOverlay) {
@@ -240,9 +261,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (soundToggle) {
+        updateSoundToggle();
         soundToggle.addEventListener('click', () => {
-            const isMuted = soundToggle.dataset.muted === 'true';
+            if (musicApi) {
+                musicApi.toggle();
+                updateSoundToggle();
+                return;
+            }
 
+            const isMuted = soundToggle.dataset.muted === 'true';
             soundToggle.dataset.muted = String(!isMuted);
             soundToggle.textContent = isMuted ? 'Выключить звук' : 'Включить звук';
         });
