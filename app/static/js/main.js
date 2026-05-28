@@ -5,12 +5,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const cardsOpenButtons = document.querySelectorAll('[data-cards-open]');
     const cardsOverlay = document.getElementById('cards-modal');
     const cardsClose = document.querySelector('.cards-modal-close');
+    const howToOpenButtons = document.querySelectorAll('[data-how-to-open]');
+    const howToOverlay = document.getElementById('how-to-modal');
+    const howToClose = document.querySelector('.how-to-close');
+    const howToSlides = Array.from(document.querySelectorAll('[data-how-to-slide]'));
+    const howToDots = Array.from(document.querySelectorAll('[data-how-to-dot]'));
+    const howToPrev = document.querySelector('[data-how-to-prev]');
+    const howToNext = document.querySelector('[data-how-to-next]');
+    const howToCurrent = document.querySelector('[data-how-to-current]');
     const soundToggle = document.querySelector('[data-sound-toggle]');
     const copyCodeButton = document.querySelector('[data-copy-code]');
     const colorChoiceOverlay = document.getElementById('color-choice-overlay');
     const colorChoiceClose = document.querySelector('.color-choice-close');
     const colorChoiceButtons = document.querySelectorAll('[data-card-color-choice]');
     let lastCardsTrigger = null;
+    let lastHowToTrigger = null;
+    let currentHowToSlide = 0;
     let pendingColorChoice = null;
 
     const closeOptions = () => {
@@ -71,6 +81,72 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const renderHowToSlide = (index) => {
+        if (!howToSlides.length) {
+            return;
+        }
+
+        currentHowToSlide = (index + howToSlides.length) % howToSlides.length;
+
+        howToSlides.forEach((slide, slideIndex) => {
+            slide.classList.toggle('is-active', slideIndex === currentHowToSlide);
+        });
+
+        howToDots.forEach((dot, dotIndex) => {
+            dot.classList.toggle('is-active', dotIndex === currentHowToSlide);
+        });
+
+        if (howToCurrent) {
+            howToCurrent.textContent = String(currentHowToSlide + 1);
+        }
+    };
+
+    const closeHowToModal = () => {
+        if (!howToOverlay) {
+            return;
+        }
+
+        howToOverlay.hidden = true;
+
+        if (lastHowToTrigger) {
+            lastHowToTrigger.focus();
+        }
+    };
+
+    if (howToOverlay && howToClose) {
+        howToOpenButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                lastHowToTrigger = button;
+                closeOptions();
+                renderHowToSlide(0);
+                howToOverlay.hidden = false;
+                howToClose.focus();
+            });
+        });
+
+        howToClose.addEventListener('click', closeHowToModal);
+
+        howToOverlay.addEventListener('click', (event) => {
+            if (event.target === howToOverlay) {
+                closeHowToModal();
+            }
+        });
+
+        howToPrev?.addEventListener('click', () => {
+            renderHowToSlide(currentHowToSlide - 1);
+        });
+
+        howToNext?.addEventListener('click', () => {
+            renderHowToSlide(currentHowToSlide + 1);
+        });
+
+        howToDots.forEach((dot) => {
+            dot.addEventListener('click', () => {
+                renderHowToSlide(Number(dot.dataset.howToDot || 0));
+            });
+        });
+    }
+
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') {
             return;
@@ -81,6 +157,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (howToOverlay && !howToOverlay.hidden) {
+            closeHowToModal();
+            return;
+        }
+
         if (optionsOverlay && !optionsOverlay.hidden) {
             closeOptions();
             return;
@@ -88,6 +169,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (colorChoiceOverlay && !colorChoiceOverlay.hidden) {
             closeColorChoice(null);
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (!howToOverlay || howToOverlay.hidden) {
+            return;
+        }
+
+        if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            renderHowToSlide(currentHowToSlide - 1);
+        }
+
+        if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            renderHowToSlide(currentHowToSlide + 1);
         }
     });
 

@@ -110,6 +110,50 @@ def test_play_invalid_card(engine):
 
     assert exc.value.code == "card_not_playable"
 
+def test_colored_special_card_matches_same_nominal(engine):
+    current_player = engine._current_player_id()
+    top = engine._new_card(color="red", type="skip", value=8)
+    card = engine._new_card(color="blue", type="skip", value=8)
+
+    engine.state.discard = [top]
+    engine.state.current_color = top.color
+    engine.state.hands[current_player].append(card)
+
+    res = engine.play_card(current_player, card.id)
+
+    assert res["status"] == "ok"
+    assert engine.state.discard[-1] == card
+
+def test_colored_special_card_matches_color(engine):
+    current_player = engine._current_player_id()
+    top = engine._new_card(color="green", type="number", value=3)
+    card = engine._new_card(color="green", type="draw2", value=11)
+
+    engine.state.discard = [top]
+    engine.state.current_color = top.color
+    engine.state.hands[current_player].append(card)
+
+    res = engine.play_card(current_player, card.id)
+
+    assert res["status"] == "ok"
+    assert engine.state.discard[-1] == card
+    assert engine.state.pending_draw == 3
+
+def test_wild_card_can_be_played_on_any_card(engine):
+    current_player = engine._current_player_id()
+    top = engine._new_card(color="red", type="number", value=4)
+    card = engine._new_card(color=None, type="wild", value=0)
+
+    engine.state.discard = [top]
+    engine.state.current_color = top.color
+    engine.state.hands[current_player].append(card)
+
+    res = engine.play_card(current_player, card.id, chosen_color="blue")
+
+    assert res["status"] == "ok"
+    assert engine.state.discard[-1] == card
+    assert engine.state.current_color == "blue"
+
 def test_win_condition(engine):
     current_player = engine._current_player_id()
     
@@ -122,7 +166,7 @@ def test_win_condition(engine):
     assert res["winner_id"] == current_player
     assert engine.state.status == "finished"
 
-def test_draw2_penalty(engine):
+def test_draw3_penalty(engine):
     current_player = engine._current_player_id()
     draw2_card = engine._new_card(color=engine.state.current_color, type="draw2")
     engine.state.hands[current_player].append(draw2_card)
@@ -130,11 +174,11 @@ def test_draw2_penalty(engine):
     # Игрок кидает draw2
     engine.play_card(current_player, draw2_card.id)
     
-    assert engine.state.pending_draw == 2
+    assert engine.state.pending_draw == 3
     next_player = engine._current_player_id()
     assert next_player != current_player
     
-    # Следующий игрок пытается сходить, хотя должен взять 2 карты
+    # Следующий игрок пытается сходить, хотя должен взять штрафные карты
     valid_card = engine._new_card(color=engine.state.current_color, type="number", value=2)
     engine.state.hands[next_player].append(valid_card)
     
@@ -146,5 +190,5 @@ def test_draw2_penalty(engine):
     initial_hand = len(engine.state.hands[next_player])
     res = engine.draw_card(next_player)
     assert res["penalty"] is True
-    assert len(engine.state.hands[next_player]) == initial_hand + 2
+    assert len(engine.state.hands[next_player]) == initial_hand + 3
     assert engine.state.pending_draw == 0

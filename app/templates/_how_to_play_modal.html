@@ -1,0 +1,58 @@
+{% set how_to_play_slides = [
+    {'src': 'img/how_to_play/step1.png', 'alt': 'Как играть, шаг 1'},
+    {'src': 'img/how_to_play/step2.png', 'alt': 'Как играть, шаг 2'},
+    {'src': 'img/how_to_play/step3.png', 'alt': 'Как играть, шаг 3'},
+    {'src': 'img/how_to_play/step4.png', 'alt': 'Как играть, шаг 4'},
+    {'src': 'img/how_to_play/step5.png', 'alt': 'Как играть, шаг 5'},
+    {'src': 'img/how_to_play/step6.png', 'alt': 'Как играть, шаг 6'},
+    {'src': 'img/how_to_play/step7.png', 'alt': 'Как играть, шаг 7'},
+] %}
+
+<div class="cards-modal-overlay how-to-overlay" id="how-to-modal" hidden>
+    <section class="cards-panel cards-modal-panel how-to-panel" role="dialog" aria-modal="true" aria-labelledby="how-to-title">
+        <button class="options-close how-to-close" type="button" aria-label="Закрыть как играть"></button>
+
+        <header class="cards-header how-to-header">
+            <h2 id="how-to-title">Как играть</h2>
+            <div class="create-title-decoration" aria-hidden="true">
+                <span></span>
+                <svg viewBox="0 0 32 32">
+                    <path d="M10 6h10l2 18H12L10 6z"></path>
+                    <path d="M14 5h10l-3 18"></path>
+                </svg>
+                <span></span>
+            </div>
+        </header>
+
+        <button class="how-to-arrow how-to-prev" type="button" data-how-to-prev aria-label="Предыдущий слайд"></button>
+
+        <div class="how-to-frame">
+            {% for slide in how_to_play_slides %}
+                <img
+                    class="how-to-slide{% if loop.first %} is-active{% endif %}"
+                    src="{{ url_for('static', filename=slide.src) }}"
+                    alt="{{ slide.alt }}"
+                    data-how-to-slide
+                    data-slide-index="{{ loop.index0 }}"
+                >
+            {% endfor %}
+
+            <div class="how-to-fallback" aria-hidden="true">
+                <strong>Слайд <span data-how-to-current>1</span>/{{ how_to_play_slides|length }}</strong>
+            </div>
+        </div>
+
+        <button class="how-to-arrow how-to-next" type="button" data-how-to-next aria-label="Следующий слайд"></button>
+
+        <div class="how-to-dots" aria-label="Слайды">
+            {% for slide in how_to_play_slides %}
+                <button
+                    class="how-to-dot{% if loop.first %} is-active{% endif %}"
+                    type="button"
+                    data-how-to-dot="{{ loop.index0 }}"
+                    aria-label="Открыть слайд {{ loop.index }}"
+                ></button>
+            {% endfor %}
+        </div>
+    </section>
+</div>

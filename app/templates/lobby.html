@@ -124,7 +124,7 @@
 
             <div class="options-actions">
                 <button class="options-btn" type="button" data-sound-toggle>Выключить звук</button>
-                <button class="options-btn" type="button">Как играть</button>
+                <button class="options-btn" type="button" data-how-to-open>Как играть</button>
                 <button class="options-btn" type="button" data-cards-open>О картах</button>
                 <form class="options-leave-form" method="post" action="{{ url_for('lobby.leave_room') }}">
                     <input type="hidden" name="room_id" value="{{ room.id if room is defined else request.args.get('room_id', '') }}">
@@ -163,5 +163,6 @@
     </div>
 
     {% include "_cards_modal.html" %}
+    {% include "_how_to_play_modal.html" %}
 </div>
 {% endblock %}

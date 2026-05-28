@@ -2089,6 +2089,165 @@ a {
     background: #3d86d7;
 }
 
+.how-to-panel {
+    position: relative;
+    width: min(1480px, calc(100vw - 32px));
+    height: min(880px, calc(100vh - 32px));
+    padding: 24px 68px 48px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: visible;
+}
+
+.how-to-header {
+    flex: 0 0 auto;
+}
+
+.how-to-frame {
+    position: relative;
+    width: 100%;
+    min-height: 0;
+    flex: 1 1 auto;
+    margin-top: 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(218, 87, 103, 0.42);
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 50% 8%, rgba(255, 149, 157, 0.08), transparent 56%),
+        rgba(35, 27, 29, 0.72);
+    box-shadow:
+        0 16px 30px rgba(0, 0, 0, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+}
+
+.how-to-slide {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    display: block;
+    object-fit: contain;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+
+.how-to-slide.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.how-to-fallback {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px dashed rgba(255, 255, 255, 0.16);
+    border-radius: 18px;
+    color: rgba(255, 242, 232, 0.6);
+    font-size: 24px;
+}
+
+.how-to-arrow,
+.how-to-dot {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.how-to-arrow {
+    position: absolute;
+    top: calc(50% + 34px);
+    z-index: 3;
+
+    width: 54px;
+    height: 82px;
+
+    transform: translateY(-50%);
+}
+
+.how-to-prev {
+    left: 12px;
+}
+
+.how-to-next {
+    right: 12px;
+}
+
+.how-to-arrow::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+
+    width: 30px;
+    height: 30px;
+
+    border-left: 4px solid #ffffff;
+    border-bottom: 4px solid #ffffff;
+    filter: drop-shadow(0 0 10px rgba(255, 118, 134, 0.42));
+}
+
+.how-to-prev::before {
+    transform: translate(-35%, -50%) rotate(45deg);
+}
+
+.how-to-next::before {
+    transform: translate(-65%, -50%) rotate(-135deg);
+}
+
+.how-to-arrow:hover::before,
+.how-to-arrow:focus-visible::before {
+    border-color: #ffb9bd;
+}
+
+.how-to-close:focus-visible,
+.how-to-arrow:focus-visible,
+.how-to-dot:focus-visible {
+    outline: 2px solid rgba(255, 118, 134, 0.82);
+    outline-offset: 4px;
+}
+
+.how-to-dots {
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    z-index: 3;
+
+    display: flex;
+    gap: 10px;
+
+    transform: translateX(-50%);
+}
+
+.how-to-dot {
+    width: 12px;
+    height: 12px;
+
+    border: 1px solid rgba(255, 255, 255, 0.58);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.how-to-dot.is-active {
+    border-color: #ffb9bd;
+    background: #ff6f7a;
+    box-shadow: 0 0 14px rgba(255, 111, 122, 0.7);
+}
+
 .svintus-btn {
     position: absolute;
     right: 40px;

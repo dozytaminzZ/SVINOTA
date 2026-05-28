@@ -6,8 +6,14 @@ from typing import Dict, List, Optional
 
 COLORS = ["red", "yellow", "green", "blue"]
 NUMBER_TYPE = "number"
-SPECIAL_TYPES = {"skip", "reverse", "draw2"}
-BLACK_TYPES = {"wild", "wild_draw4", "cover_deck"}
+SPECIAL_CARD_VALUES = {
+    "skip": 8,
+    "reverse": 9,
+    "cover_deck": 10,
+    "draw2": 11,
+}
+SPECIAL_TYPES = set(SPECIAL_CARD_VALUES)
+BLACK_TYPES = {"wild", "wild_draw4"}
 
 @dataclass
 class Card:
@@ -101,17 +107,15 @@ class GameEngine:
         deck = []
         for color in COLORS:
             deck.append(self._new_card(color=color, type=NUMBER_TYPE, value=0))
-            for value in range(1, 10):
+            for value in range(1, 8):
                 deck.append(self._new_card(color=color, type=NUMBER_TYPE, value=value))
                 deck.append(self._new_card(color=color, type=NUMBER_TYPE, value=value))
-            for special in SPECIAL_TYPES:
-                deck.append(self._new_card(color=color, type=special))
-                deck.append(self._new_card(color=color, type=special))
+            for special, value in SPECIAL_CARD_VALUES.items():
+                deck.append(self._new_card(color=color, type=special, value=value))
+                deck.append(self._new_card(color=color, type=special, value=value))
 
         for _ in range(4):
-            deck.append(self._new_card(color=None, type="wild"))
-            deck.append(self._new_card(color=None, type="wild_draw4"))
-            deck.append(self._new_card(color=None, type="cover_deck"))
+            deck.append(self._new_card(color=None, type="wild", value=0))
 
         return deck
 
@@ -162,7 +166,7 @@ class GameEngine:
             return True
         if card.color == current_color:
             return True
-        if card.type == NUMBER_TYPE and top.type == NUMBER_TYPE and card.value == top.value:
+        if card.value is not None and top.value is not None and card.value == top.value:
             return True
         if card.type != NUMBER_TYPE and card.type == top.type:
             return True
@@ -304,7 +308,7 @@ class GameEngine:
             if len(self.state.players) == 2:
                 skip_next = True
         elif card.type == "draw2":
-            self.state.pending_draw = 2
+            self.state.pending_draw = 3
         elif card.type == "wild_draw4":
             self.state.pending_draw = 4
         elif card.type == "cover_deck":
