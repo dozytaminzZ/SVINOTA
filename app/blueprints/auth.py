@@ -36,6 +36,10 @@ def _is_real_user_authenticated():
     )
 
 
+def _has_visible_text(value):
+    return any(not char.isspace() for char in value or '')
+
+
 def _user_payload(user):
     return {
         'id': str(user.id),
@@ -127,7 +131,7 @@ def register():
             password = data.get('password') or ''
             email = (data.get('email') or '').strip() or None
 
-            if not username or not password:
+            if not username or not password or not _has_visible_text(username):
                 return _json_error('username and password are required')
 
             if len(username) > 50:
@@ -183,7 +187,7 @@ def register():
         if password != password_repeat:
             return render_template('auth.html', password_error=True), 400
 
-        if not username or not password:
+        if not username or not password or not _has_visible_text(username):
             return render_template('auth.html', password_error=True), 400
 
         existing_user = User.query.filter_by(username=username).first()

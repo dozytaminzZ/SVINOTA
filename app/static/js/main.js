@@ -7,7 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const cardsClose = document.querySelector('.cards-modal-close');
     const soundToggle = document.querySelector('[data-sound-toggle]');
     const copyCodeButton = document.querySelector('[data-copy-code]');
+    const colorChoiceOverlay = document.getElementById('color-choice-overlay');
+    const colorChoiceClose = document.querySelector('.color-choice-close');
+    const colorChoiceButtons = document.querySelectorAll('[data-card-color-choice]');
     let lastCardsTrigger = null;
+    let pendingColorChoice = null;
 
     const closeOptions = () => {
         if (optionsOverlay) {
@@ -79,8 +83,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (optionsOverlay && !optionsOverlay.hidden) {
             closeOptions();
+            return;
+        }
+
+        if (colorChoiceOverlay && !colorChoiceOverlay.hidden) {
+            closeColorChoice(null);
         }
     });
+
+    function closeColorChoice(color) {
+        if (!colorChoiceOverlay) {
+            return;
+        }
+
+        colorChoiceOverlay.hidden = true;
+
+        if (pendingColorChoice) {
+            pendingColorChoice(color);
+            pendingColorChoice = null;
+        }
+    }
+
+    function chooseCardColor() {
+        if (!colorChoiceOverlay) {
+            return Promise.resolve(null);
+        }
+
+        colorChoiceOverlay.hidden = false;
+
+        const firstButton = colorChoiceOverlay.querySelector('[data-card-color-choice]');
+
+        if (firstButton) {
+            firstButton.focus();
+        }
+
+        return new Promise((resolve) => {
+            pendingColorChoice = resolve;
+        });
+    }
+
+    colorChoiceButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            closeColorChoice(button.dataset.cardColorChoice);
+        });
+    });
+
+    if (colorChoiceClose) {
+        colorChoiceClose.addEventListener('click', () => {
+            closeColorChoice(null);
+        });
+    }
+
+    if (colorChoiceOverlay) {
+        colorChoiceOverlay.addEventListener('click', (event) => {
+            if (event.target === colorChoiceOverlay) {
+                closeColorChoice(null);
+            }
+        });
+    }
 
     if (soundToggle) {
         soundToggle.addEventListener('click', () => {
@@ -160,16 +220,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const directionArrow = document.querySelector('.direction-arrow');
     const svintusButton = document.querySelector('.svintus-btn');
     const roomId = gamePage?.dataset.roomId;
-    const demoDeckCards = [
-        { id: 'draw-red-4', src: '/static/cards/red/red4.jpg', name: 'Красная 4', color: 'red', type: 'number' },
-        { id: 'draw-yellow-7', src: '/static/cards/yellow/yellow7.jpg', name: 'Желтая 7', color: 'yellow', type: 'number' },
-        { id: 'draw-blue-8', src: '/static/cards/blue/blue8.jpg', name: 'Синяя 8', color: 'blue', type: 'number' },
-        { id: 'draw-green-11', src: '/static/cards/green/green11.jpg', name: 'Зеленая спецкарта', color: 'green', type: 'special' },
-        { id: 'draw-grey-0', src: '/static/cards/grey/grey0.jpg', name: 'Полисвин', color: 'grey', type: 'special' }
-    ];
+    const currentUserId = gamePage?.dataset.currentUserId;
+    const resultUrl = gamePage?.dataset.resultUrl;
+    const playerNamesScript = document.getElementById('game-player-names');
+    let playerNames = {};
+
+    if (playerNamesScript) {
+        try {
+            playerNames = JSON.parse(playerNamesScript.textContent || '{}');
+        } catch (error) {
+            playerNames = {};
+        }
+    }
+
 
     let socket = null;
-    let drawIndex = 0;
     let isDrawingCard = false;
     let playedCardIndex = 0;
 
@@ -190,10 +255,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         socket.on('game:error', (payload) => {
             console.error('Game error:', payload);
+            showGameError(payload?.error || 'Действие сейчас нельзя выполнить');
 
             document.querySelectorAll('.play-card.is-origin-hidden').forEach((card) => {
                 card.classList.remove('is-origin-hidden');
             });
+
+            requestGameState();
         });
 
         socket.on('game:action', (payload) => {
@@ -202,17 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         socket.on('game:state', (state) => {
             console.log('New game state:', state);
-            updateDirectionArrow(state.direction);
-
-            /*
-                Позже сюда нужно добавить нормальную перерисовку:
-                - renderHand(state.viewer_hand)
-                - renderTopCard(state.top_card)
-                - renderPlayers(state.players)
-                - renderTurnStatus(state.current_player_id)
-
-                Пока оставляем console.log, чтобы не ломать текущий моковый интерфейс.
-            */
+            renderGameState(state);
         });
 
         socket.on('game:card_played', (payload) => {
@@ -249,6 +307,254 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(ghost);
 
         return ghost;
+    }
+
+    function requestGameState() {
+        if (!socket || !roomId) {
+            return;
+        }
+
+        socket.emit('game:state', {
+            room_id: roomId
+        });
+    }
+
+    async function postGameAction(endpoint, payload = {}) {
+        if (!roomId) {
+            return null;
+        }
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json'
+            },
+            body: JSON.stringify({
+                room_id: roomId,
+                ...payload
+            })
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            showGameError(data.error || 'Действие сейчас нельзя выполнить');
+            return null;
+        }
+
+        if (data.state) {
+            renderGameState(data.state);
+        }
+
+        return data;
+    }
+
+    async function fetchGameState() {
+        if (!roomId) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/game/state?room_id=${encodeURIComponent(roomId)}`, {
+                headers: {
+                    Accept: 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.state) {
+                renderGameState(data.state);
+            }
+        } catch (error) {
+            // Socket events or the next poll will retry.
+        }
+    }
+
+    function showGameError(message) {
+        const turnStatus = document.querySelector('.turn-status');
+
+        if (!turnStatus) {
+            return;
+        }
+
+        turnStatus.dataset.error = message;
+        turnStatus.classList.add('has-error');
+
+        window.setTimeout(() => {
+            turnStatus.classList.remove('has-error');
+            delete turnStatus.dataset.error;
+        }, 1800);
+    }
+
+    function getPlayerName(playerId) {
+        return playerNames[playerId] || 'Игрок';
+    }
+
+    function getCardAssetValue(card) {
+        if (!card) {
+            return 0;
+        }
+
+        if (card.color === null || card.color === 'grey') {
+            return 0;
+        }
+
+        if (card.type === 'number') {
+            return Number(card.value || 0);
+        }
+
+        if (card.type === 'skip') {
+            return 8;
+        }
+
+        if (card.type === 'reverse') {
+            return 9;
+        }
+
+        if (card.type === 'cover_deck') {
+            return 10;
+        }
+
+        return 11;
+    }
+
+    function getCardImageSrc(card) {
+        const color = card?.color || 'grey';
+        const value = getCardAssetValue(card);
+
+        return `/static/cards/${color}/${color}${value}.jpg`;
+    }
+
+    function getCardLabel(card) {
+        if (!card) {
+            return 'Карта';
+        }
+
+        if (card.type === 'number') {
+            return `${card.color} ${card.value}`;
+        }
+
+        return `${card.color || 'grey'} ${card.type}`;
+    }
+
+    function createCardButton(card) {
+        const button = document.createElement('button');
+        const image = document.createElement('img');
+
+        button.className = 'play-card';
+        button.type = 'button';
+        button.dataset.cardId = card.id;
+        button.dataset.cardColor = card.color || 'grey';
+        button.dataset.cardType = card.type;
+
+        image.src = getCardImageSrc(card);
+        image.alt = getCardLabel(card);
+
+        button.appendChild(image);
+
+        return button;
+    }
+
+    function renderHand(cards = []) {
+        if (!playerHand) {
+            return;
+        }
+
+        playerHand.replaceChildren();
+
+        cards.forEach((card) => {
+            const button = createCardButton(card);
+            playerHand.appendChild(button);
+            bindCardDrag(button);
+        });
+
+        updateHandLayout();
+        updateYouCardsCount();
+    }
+
+    function renderTopDiscard(card) {
+        const target = document.querySelector('.play-slot');
+
+        if (!target || !card) {
+            return;
+        }
+
+        const tableCard = createCardButton(card);
+
+        tableCard.classList.remove('play-card');
+        tableCard.classList.add('table-played-card', 'table-played-card-3');
+        tableCard.removeAttribute('style');
+        tableCard.disabled = true;
+
+        target.classList.add('has-card');
+        target.replaceChildren(tableCard);
+    }
+
+    function renderPlayers(players = []) {
+        players.forEach((player) => {
+            const seat = document.querySelector(`[data-player-id="${player.id}"]`);
+
+            if (!seat) {
+                return;
+            }
+
+            seat.classList.toggle('active-player', Boolean(player.is_current));
+
+            const counter = seat.querySelector('.player-badge span, .side-badge span');
+
+            if (counter) {
+                counter.textContent = `${player.hand_count} карт`;
+            }
+
+            seat.querySelectorAll('.opponent-hand, .side-hand').forEach((hand) => {
+                const cardClass = hand.classList.contains('side-hand') ? 'side-card' : 'mini-card';
+                const spacing = cardClass === 'side-card' ? 9 : 10;
+                const count = player.hand_count;
+
+                hand.replaceChildren();
+
+                for (let index = 0; index < count; index += 1) {
+                    const back = document.createElement('span');
+
+                    back.className = `card-back ${cardClass}`;
+                    back.style.setProperty('--x', `${(index - ((count - 1) / 2)) * spacing}px`);
+                    hand.appendChild(back);
+                }
+            });
+        });
+    }
+
+    function renderTurnStatus(state) {
+        const turnStrong = document.querySelector('.turn-status strong');
+
+        if (turnStrong) {
+            turnStrong.textContent = getPlayerName(state.current_player_id);
+        }
+    }
+
+    function renderGameState(state) {
+        if (!state) {
+            return;
+        }
+
+        updateDirectionArrow(state.direction);
+        renderPlayers(state.players || []);
+        renderTurnStatus(state);
+        renderTopDiscard(state.top_discard);
+
+        if (Array.isArray(state.viewer_hand)) {
+            renderHand(state.viewer_hand);
+        }
+
+        if (state.status === 'finished' && resultUrl) {
+            window.location.href = resultUrl;
+        }
     }
 
     function createDeckGhost() {
@@ -318,29 +624,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function emitPlayCard(card) {
+    async function emitPlayCard(card) {
         const cardId = card.dataset.cardId;
 
         if (!cardId) {
             console.error('card_id is missing on card element');
-            return;
+            return false;
+        }
+
+        const chosenColor = card.dataset.cardColor === 'grey'
+            ? await chooseCardColor()
+            : null;
+
+        if (card.dataset.cardColor === 'grey' && !chosenColor) {
+            return false;
         }
 
         if (!socket) {
-            console.warn('Socket.IO is not connected. Front animation works, but backend event was not sent.');
-            return;
+            postGameAction('/game/play', {
+                card_id: cardId,
+                chosen_color: chosenColor
+            });
+            return true;
         }
 
         if (!roomId) {
             console.error('room_id is missing');
-            return;
+            return false;
         }
 
         socket.emit('game:play', {
             room_id: roomId,
             card_id: cardId,
-            chosen_color: null
+            chosen_color: chosenColor
         });
+
+        return true;
     }
 
     function updateDirectionArrow(direction) {
@@ -412,27 +731,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function createDrawnCard() {
-        const cardData = demoDeckCards[drawIndex % demoDeckCards.length];
-        const card = document.createElement('button');
-        const image = document.createElement('img');
-
-        drawIndex += 1;
-
-        card.className = 'play-card is-origin-hidden';
-        card.type = 'button';
-        card.dataset.cardId = `${cardData.id}-${Date.now()}`;
-        card.dataset.cardColor = cardData.color;
-        card.dataset.cardType = cardData.type;
-
-        image.src = cardData.src;
-        image.alt = cardData.name;
-
-        card.appendChild(image);
-
-        return card;
-    }
-
     function animateDeckGhostToCard(ghost, card) {
         return new Promise((resolve) => {
             if (!ghost || !card) {
@@ -444,12 +742,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const ghostRect = ghost.getBoundingClientRect();
             const left = targetRect.left + targetRect.width / 2 - ghostRect.width / 2;
             const top = targetRect.top + targetRect.height / 2 - ghostRect.height / 2;
+            const shouldResize = card.classList?.contains('play-card');
 
             ghost.classList.add('is-drawing');
             ghost.style.left = `${left}px`;
             ghost.style.top = `${top}px`;
-            ghost.style.width = `${targetRect.width}px`;
-            ghost.style.height = `${targetRect.height}px`;
+
+            if (shouldResize) {
+                ghost.style.width = `${targetRect.width}px`;
+                ghost.style.height = `${targetRect.height}px`;
+            }
+
             ghost.style.transform = 'rotate(0deg) scale(1)';
             ghost.style.opacity = '0.72';
 
@@ -461,7 +764,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function emitDrawCard() {
-        if (!socket || !roomId) {
+        if (!roomId) {
+            return;
+        }
+
+        if (!socket) {
+            postGameAction('/game/draw');
             return;
         }
 
@@ -479,16 +787,9 @@ document.addEventListener('DOMContentLoaded', () => {
         deckZone?.classList.add('is-drawing');
 
         const ghost = createDeckGhost();
-        const card = createDrawnCard();
+        const target = playerHand.querySelector('.play-card:last-child') || playerHand;
 
-        playerHand.appendChild(card);
-        bindCardDrag(card);
-        updateHandLayout();
-        updateYouCardsCount();
-
-        await animateDeckGhostToCard(ghost, card);
-
-        card.classList.remove('is-origin-hidden');
+        await animateDeckGhostToCard(ghost, target);
         deckZone?.classList.remove('is-drawing');
         emitDrawCard();
         isDrawingCard = false;
@@ -582,9 +883,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 playZone.classList.remove('is-drop-target');
 
                 if (isOverDiscard) {
+                    const isSent = await emitPlayCard(card);
+
+                    if (!isSent) {
+                        await animateGhostBack(ghost, card);
+                        return;
+                    }
+
                     await animateGhostToPlayZone(ghost);
                     placeCardOnTable(card);
-                    emitPlayCard(card);
                     removePlayedCard(card);
                     return;
                 }
@@ -626,6 +933,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateHandLayout();
     initCardDrag();
+
+    if (gamePage && roomId && !socket) {
+        fetchGameState();
+        window.setInterval(fetchGameState, 1800);
+    }
 
     if (svintusButton) {
         svintusButton.addEventListener('click', () => {

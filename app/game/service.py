@@ -46,9 +46,15 @@ def get_player_ids(room_id: uuid.UUID) -> List[str]:
 
 def get_game_or_error(room_id: uuid.UUID):
     game = get_game(str(room_id))
-    if game is None:
+    if game is not None:
+        return game
+
+    room = get_room(room_id)
+
+    if room.status != "playing":
         raise GameServiceError("game not found", "game_not_found", 404)
-    return game
+
+    return create_game_for_room(room_id)
 
 
 def create_game_for_room(room_id: uuid.UUID, starter_id=None):

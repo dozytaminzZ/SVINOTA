@@ -3,33 +3,16 @@
 {% block title %}Игровой стол - SVINOTA{% endblock %}
 
 {% block content %}
-{% set hand_cards = [
-    {'id': 'demo-red-2', 'src': 'cards/red/red2.jpg', 'name': 'Красная 2', 'color': 'red', 'type': 'number'},
-    {'id': 'demo-yellow-5', 'src': 'cards/yellow/yellow5.jpg', 'name': 'Желтая 5', 'color': 'yellow', 'type': 'number'},
-    {'id': 'demo-blue-7', 'src': 'cards/blue/blue7.jpg', 'name': 'Синяя 7', 'color': 'blue', 'type': 'number'},
-    {'id': 'demo-green-9', 'src': 'cards/green/green9.jpg', 'name': 'Зеленая 9', 'color': 'green', 'type': 'number'},
-    {'id': 'demo-red-8', 'src': 'cards/red/red8.jpg', 'name': 'Красная 8', 'color': 'red', 'type': 'number'},
-    {'id': 'demo-yellow-10', 'src': 'cards/yellow/yellow10.jpg', 'name': 'Желтая 10', 'color': 'yellow', 'type': 'number'},
-    {'id': 'demo-blue-11', 'src': 'cards/blue/blue11.jpg', 'name': 'Синяя спецкарта', 'color': 'blue', 'type': 'special'},
-    {'id': 'demo-green-0', 'src': 'cards/green/green0.jpg', 'name': 'Зеленая 0', 'color': 'green', 'type': 'number'},
-    {'id': 'demo-red-1', 'src': 'cards/red/red1.jpg', 'name': 'Красная 1', 'color': 'red', 'type': 'number'},
-    {'id': 'demo-yellow-6', 'src': 'cards/yellow/yellow6.jpg', 'name': 'Желтая 6', 'color': 'yellow', 'type': 'number'},
-    {'id': 'demo-blue-3', 'src': 'cards/blue/blue3.jpg', 'name': 'Синяя 3', 'color': 'blue', 'type': 'number'},
-    {'id': 'demo-green-4', 'src': 'cards/green/green4.jpg', 'name': 'Зеленая 4', 'color': 'green', 'type': 'number'},
-    {'id': 'demo-red-10', 'src': 'cards/red/red10.jpg', 'name': 'Красная спецкарта', 'color': 'red', 'type': 'special'},
-    {'id': 'demo-yellow-11', 'src': 'cards/yellow/yellow11.jpg', 'name': 'Желтая спецкарта', 'color': 'yellow', 'type': 'special'},
-    {'id': 'demo-blue-8', 'src': 'cards/blue/blue8.jpg', 'name': 'Синяя 8', 'color': 'blue', 'type': 'number'},
-    {'id': 'demo-green-8', 'src': 'cards/green/green8.jpg', 'name': 'Зеленая 8', 'color': 'green', 'type': 'number'},
-    {'id': 'demo-red-6', 'src': 'cards/red/red6.jpg', 'name': 'Красная 6', 'color': 'red', 'type': 'number'},
-    {'id': 'demo-yellow-2', 'src': 'cards/yellow/yellow2.jpg', 'name': 'Желтая 2', 'color': 'yellow', 'type': 'number'},
-    {'id': 'demo-blue-9', 'src': 'cards/blue/blue9.jpg', 'name': 'Синяя 9', 'color': 'blue', 'type': 'number'},
-    {'id': 'demo-green-11', 'src': 'cards/green/green11.jpg', 'name': 'Зеленая спецкарта', 'color': 'green', 'type': 'special'},
-] %}
+{% set hand_cards = [] %}
 
 <div
     class="page game-page"
     data-room-id="{{ room.id if room is defined else request.args.get('room_id', '') }}"
+    data-current-user-id="{{ current_player.id if current_player else '' }}"
+    data-result-url="{{ result_url }}"
 >
+    <script id="game-player-names" type="application/json">{{ player_names|tojson }}</script>
+
     <button class="table-menu-btn" type="button" aria-label="Открыть настройки">
         <span></span>
         <span></span>
@@ -39,7 +22,7 @@
     <main class="table-scene" aria-label="Игровой стол">
         <section class="opponents-row top-opponents" aria-label="Игроки сверху">
             {% for player in top_players %}
-            <article class="player-seat player-top">
+            <article class="player-seat player-top{% if player.is_turn %} active-player{% endif %}" data-player-id="{{ player.id }}">
                 <div class="opponent-hand">
                     {% for i in range(player.cards) %}
                         <span class="card-back mini-card" style="--x: {{ (i - ((player.cards - 1) / 2)) * 10 }}px"></span>
@@ -57,7 +40,7 @@
         </section>
 
         {% if left_player %}
-        <aside class="side-player left-player">
+        <aside class="side-player left-player{% if left_player.is_turn %} active-player{% endif %}" data-player-id="{{ left_player.id }}">
             <div class="side-hand">
                 {% for i in range(left_player.cards) %}
                     <span class="card-back side-card" style="--x: {{ (i - ((left_player.cards - 1) / 2)) * 9 }}px"></span>
@@ -72,7 +55,7 @@
         {% endif %}
 
         {% if right_player %}
-        <aside class="side-player right-player active-player">
+        <aside class="side-player right-player{% if right_player.is_turn %} active-player{% endif %}" data-player-id="{{ right_player.id }}">
             <div class="side-hand">
                 {% for i in range(right_player.cards) %}
                     <span class="card-back side-card" style="--x: {{ (i - ((right_player.cards - 1) / 2)) * 9 }}px"></span>
@@ -151,6 +134,34 @@
             </div>
         </section>
     </div>
+
+    <div class="color-choice-overlay" id="color-choice-overlay" hidden>
+        <section class="color-choice-modal" role="dialog" aria-modal="true" aria-labelledby="color-choice-title">
+            <h2 id="color-choice-title">Выберите цвет</h2>
+
+            <button class="color-choice-close" type="button" aria-label="Закрыть выбор цвета"></button>
+
+            <div class="color-choice-actions">
+                <button class="color-choice-btn color-red" type="button" data-card-color-choice="red">
+                    <span></span>
+                    Красный
+                </button>
+                <button class="color-choice-btn color-yellow" type="button" data-card-color-choice="yellow">
+                    <span></span>
+                    Желтый
+                </button>
+                <button class="color-choice-btn color-green" type="button" data-card-color-choice="green">
+                    <span></span>
+                    Зеленый
+                </button>
+                <button class="color-choice-btn color-blue" type="button" data-card-color-choice="blue">
+                    <span></span>
+                    Синий
+                </button>
+            </div>
+        </section>
+    </div>
+
     {% include "_cards_modal.html" %}
 </div>
 {% endblock %}

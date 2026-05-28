@@ -7,7 +7,7 @@ from flask_login import current_user, login_user, logout_user
 
 from app.extensions import db
 from app.game.registry import get_game
-from app.game.service import GameServiceError, create_game_for_room
+from app.game.service import GameServiceError, create_game_for_room, get_game_or_error
 from app.models import Room, RoomPlayer, User
 
 
@@ -171,9 +171,17 @@ def _room_active_players(room):
     seats = _room_seats(room)
     game = get_game(str(room.id))
     hand_counts = {}
+    turn_player_id = None
+
+    if game is None and room.status == 'playing':
+        try:
+            game = get_game_or_error(room.id)
+        except GameServiceError:
+            game = None
 
     if game is not None:
         state = game.get_state()
+        turn_player_id = state.get('current_player_id')
         hand_counts = {
             player['id']: player['hand_count']
             for player in state.get('players', [])
@@ -190,6 +198,7 @@ def _room_active_players(room):
             **seat,
             'id': player_id,
             'cards': hand_counts.get(player_id, 8),
+            'is_turn': player_id == turn_player_id,
         })
 
     return players
@@ -576,6 +585,9 @@ def game_table():
     if room.status == 'waiting':
         return redirect(url_for('lobby.create_game'))
 
+    if room.status == 'finished':
+        return redirect(url_for('lobby.game_result', room_id=str(room.id)))
+
     players = _room_active_players(room)
     current_player = None
 
@@ -601,6 +613,54 @@ def game_table():
         top_players=opponents[:3],
         left_player=opponents[3] if len(opponents) > 3 else None,
         right_player=opponents[4] if len(opponents) > 4 else None,
+        player_names={player['id']: player['name'] for player in players},
+        result_url=url_for('lobby.game_result', room_id=str(room.id)),
+    )
+
+
+@lobby_bp.route('/result', methods=['GET'])
+def game_result():
+    room_id_raw = (request.args.get('room_id') or '').strip()
+
+    try:
+        room_id = uuid.UUID(room_id_raw)
+    except ValueError:
+        return redirect(url_for('index'))
+
+    room = db.session.get(Room, room_id)
+    game = get_game(str(room_id))
+
+    if room is None or game is None:
+        return redirect(url_for('index'))
+
+    players = _room_active_players(room)
+    players_by_id = {player['id']: player for player in players}
+    state = game.get_state()
+    winner_id = state.get('winner_id')
+    winner_name = players_by_id.get(winner_id, {}).get('name', 'Победитель')
+
+    ordered_players = sorted(
+        state.get('players', []),
+        key=lambda player: (0 if player['id'] == winner_id else 1, player['hand_count'])
+    )
+
+    results = []
+
+    for index, player in enumerate(ordered_players, start=1):
+        player_name = players_by_id.get(player['id'], {}).get('name', 'Игрок')
+        cards = player.get('hand_count', 0)
+
+        results.append({
+            'place': index,
+            'name': player_name,
+            'cards': cards,
+            'score': 0 if player['id'] == winner_id else cards,
+        })
+
+    return render_template(
+        'game_result.html',
+        winner_name=winner_name,
+        results=results,
     )
 
 

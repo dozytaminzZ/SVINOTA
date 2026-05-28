@@ -1,6 +1,6 @@
 import pytest
 import uuid
-from app.game.registry import _REGISTRY
+from app.game.registry import _REGISTRY, get_game
 from app.game.service import create_game_for_room
 from app.extensions import db
 from app.models import RoomPlayer, User
@@ -91,6 +91,17 @@ def test_get_state(client, test_room):
     assert 'game_id' in state
     assert 'viewer_hand' in state
 
+def test_get_state_restores_playing_room_after_registry_loss(client, test_room):
+    room_id = test_room['room_id']
+    create_game_for_room(room_id, starter_id=test_room['p1'])
+    _REGISTRY.clear()
+
+    res = client.get(f'/game/state?room_id={room_id}')
+
+    assert res.status_code == 200
+    assert res.json['state']['status'] == 'playing'
+    assert 'viewer_hand' in res.json['state']
+
 def test_game_draw_card(client, test_room):
     room_id = test_room['room_id']
     create_game_for_room(room_id, starter_id=test_room['p1'])
@@ -111,3 +122,18 @@ def test_game_draw_card(client, test_room):
         draw_res = client.post('/game/draw', json={'room_id': room_id})
         assert draw_res.status_code == 200
         assert draw_res.json['result']['status'] == 'ok'
+
+def test_game_result_page_uses_finished_state(client, test_room):
+    room_id = test_room['room_id']
+    create_game_for_room(room_id, starter_id=test_room['p1'])
+    game = get_game(room_id)
+
+    game.engine.state.status = 'finished'
+    game.engine.state.winner_id = test_room['p1']
+
+    res = client.get(f'/lobby/result?room_id={room_id}')
+    html = res.get_data(as_text=True)
+
+    assert res.status_code == 200
+    assert test_room['p1_username'] in html
+    assert 'ИГРА ЗАВЕРШЕНА!' in html

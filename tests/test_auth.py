@@ -33,6 +33,14 @@ def test_register_duplicate(client):
         'password': 'password123'
     })
     assert res.status_code == 400
+
+def test_register_rejects_blank_username(client):
+    res = client.post('/auth/register', json={
+        'username': '   ',
+        'password': 'password123'
+    })
+
+    assert res.status_code == 400
     assert 'error' in res.json
 
 def test_login(client):

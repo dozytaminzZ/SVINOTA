@@ -29,7 +29,7 @@ class GameConfig:
     cards_per_player: int = 8
     svintus_timeout_sec: int = 3
     cover_deck_timeout_sec: int = 5
-    penalty_invalid: int = 2
+    penalty_invalid: int = 0
     penalty_svintus: int = 2
     penalty_cover_deck: int = 2
     allow_pass_without_draw: bool = False
@@ -271,7 +271,7 @@ class GameEngine:
             raise GameRuleError("cover deck event active", "cover_deck_active")
         if player_id != self._current_player_id():
             self._apply_invalid_penalty(player_id)
-            raise GameRuleError("not your turn", "not_your_turn")
+            raise GameRuleError("Не ваша очередь", "not_your_turn")
         if self.state.pending_draw > 0:
             raise GameRuleError("draw penalty required", "draw_required")
 
@@ -282,7 +282,7 @@ class GameEngine:
             raise GameRuleError("card not in hand", "card_missing")
         if not self._is_playable(card):
             self._apply_invalid_penalty(player_id)
-            raise GameRuleError("card not playable", "card_not_playable")
+            raise GameRuleError("Этой картой нельзя походить", "card_not_playable")
 
         if card.type in BLACK_TYPES:
             if chosen_color not in COLORS:
@@ -333,7 +333,7 @@ class GameEngine:
             raise GameRuleError("cover deck event active", "cover_deck_active")
         if player_id != self._current_player_id():
             self._apply_invalid_penalty(player_id)
-            raise GameRuleError("not your turn", "not_your_turn")
+            raise GameRuleError("Не ваша очередь", "not_your_turn")
 
         if self.state.pending_draw > 0:
             count = self.state.pending_draw
@@ -367,7 +367,7 @@ class GameEngine:
             raise GameRuleError("cover deck event active", "cover_deck_active")
         if player_id != self._current_player_id():
             self._apply_invalid_penalty(player_id)
-            raise GameRuleError("not your turn", "not_your_turn")
+            raise GameRuleError("Не ваша очередь", "not_your_turn")
         if self.state.pending_draw > 0:
             raise GameRuleError("draw penalty required", "draw_required")
 

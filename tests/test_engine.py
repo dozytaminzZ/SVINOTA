@@ -62,6 +62,18 @@ def test_draw_card_not_your_turn(engine):
     # Должен быть выписан штраф за ошибку
     assert len(engine.state.hands[not_current]) == initial_hand_size + engine.config.penalty_invalid
 
+def test_default_invalid_move_does_not_draw_penalty(players):
+    engine = GameEngine(player_ids=players, seed=42)
+    current_player = engine._current_player_id()
+    not_current = [p for p in engine.state.players if p != current_player][0]
+    initial_hand_size = len(engine.state.hands[not_current])
+
+    with pytest.raises(GameRuleError) as exc:
+        engine.draw_card(not_current)
+
+    assert exc.value.code == "not_your_turn"
+    assert len(engine.state.hands[not_current]) == initial_hand_size
+
 def test_play_valid_card(engine):
     current_player = engine._current_player_id()
     # Искусственно кладем ему в руку карту, подходящую по цвету
