@@ -3,13 +3,6 @@
 {% block title %}Игровой стол - SVINOTA{% endblock %}
 
 {% block content %}
-{% set demo_players = [
-    {'name': 'Димасик', 'cards': 0},
-    {'name': 'Сержант', 'cards': 5},
-    {'name': 'Виталик', 'cards': 10},
-] %}
-{% set left_cards = 15 %}
-{% set right_cards = 20 %}
 {% set hand_cards = [
     {'id': 'demo-red-2', 'src': 'cards/red/red2.jpg', 'name': 'Красная 2', 'color': 'red', 'type': 'number'},
     {'id': 'demo-yellow-5', 'src': 'cards/yellow/yellow5.jpg', 'name': 'Желтая 5', 'color': 'yellow', 'type': 'number'},
@@ -45,7 +38,7 @@
 
     <main class="table-scene" aria-label="Игровой стол">
         <section class="opponents-row top-opponents" aria-label="Игроки сверху">
-            {% for player in demo_players %}
+            {% for player in top_players %}
             <article class="player-seat player-top">
                 <div class="opponent-hand">
                     {% for i in range(player.cards) %}
@@ -63,31 +56,35 @@
             {% endfor %}
         </section>
 
+        {% if left_player %}
         <aside class="side-player left-player">
             <div class="side-hand">
-                {% for i in range(left_cards) %}
-                    <span class="card-back side-card" style="--x: {{ (i - ((left_cards - 1) / 2)) * 9 }}px"></span>
+                {% for i in range(left_player.cards) %}
+                    <span class="card-back side-card" style="--x: {{ (i - ((left_player.cards - 1) / 2)) * 9 }}px"></span>
                 {% endfor %}
             </div>
             <div class="side-badge">
                 <img src="{{ url_for('static', filename='img/logo.png') }}" alt="">
-                <strong>Хитрюга</strong>
-                <span>{{ left_cards }} карт</span>
+                <strong>{{ left_player.name }}</strong>
+                <span>{{ left_player.cards }} карт</span>
             </div>
         </aside>
+        {% endif %}
 
+        {% if right_player %}
         <aside class="side-player right-player active-player">
             <div class="side-hand">
-                {% for i in range(right_cards) %}
-                    <span class="card-back side-card" style="--x: {{ (i - ((right_cards - 1) / 2)) * 9 }}px"></span>
+                {% for i in range(right_player.cards) %}
+                    <span class="card-back side-card" style="--x: {{ (i - ((right_player.cards - 1) / 2)) * 9 }}px"></span>
                 {% endfor %}
             </div>
             <div class="side-badge">
                 <img src="{{ url_for('static', filename='img/logo.png') }}" alt="">
-                <strong>Валера</strong>
-                <span>{{ right_cards }} карт</span>
+                <strong>{{ right_player.name }}</strong>
+                <span>{{ right_player.cards }} карт</span>
             </div>
         </aside>
+        {% endif %}
 
         <section class="game-table">
             <div class="deck-zone" data-deck-zone="deck" role="button" tabindex="0" aria-label="Взять карту из колоды">
@@ -130,7 +127,7 @@
 
         <div class="turn-status">
             <span aria-hidden="true">i</span>
-            Ходит <strong>Валера</strong>
+            Ходит <strong>{{ current_player.name if current_player else 'Игрок' }}</strong>
         </div>
 
         <button class="svintus-btn" type="button">СВИНТУС!</button>

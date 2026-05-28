@@ -65,7 +65,7 @@ def register_game_socket_handlers(socketio):
         try:
             room_id = parse_room_id((data or {}).get("room_id"))
             get_membership(room_id, current_user.id)
-            game = create_game_for_room(room_id)
+            game = create_game_for_room(room_id, starter_id=current_user.id)
             public_state = game.get_state()
             private_state = game.get_state(viewer_id=current_user.id)
             emit("game:state", public_state, to=str(room_id))

@@ -109,6 +109,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const waitingRoomPage = document.querySelector('[data-waiting-room-id]');
+    const waitingRoomId = waitingRoomPage?.dataset.waitingRoomId;
+    const initialWaitingPlayersCount = Number(waitingRoomPage?.dataset.waitingPlayersCount || 0);
+
+    if (waitingRoomPage && waitingRoomId) {
+        const checkWaitingRoomStatus = async () => {
+            try {
+                const response = await fetch(`/lobby/status?room_id=${encodeURIComponent(waitingRoomId)}`, {
+                    headers: {
+                        Accept: 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = await response.json();
+
+                if (payload.room?.status === 'playing' && payload.game_url) {
+                    window.location.href = payload.game_url;
+                    return;
+                }
+
+                if (payload.room?.status === 'waiting' && payload.room.players_count !== initialWaitingPlayersCount) {
+                    window.location.reload();
+                }
+            } catch (error) {
+                // The next poll will retry quietly.
+            }
+        };
+
+        window.setInterval(checkWaitingRoomStatus, 1000);
+        checkWaitingRoomStatus();
+    }
+
     document.querySelectorAll('.card-info-tile').forEach((cardTile) => {
         cardTile.addEventListener('click', () => {
             const isFlipped = cardTile.classList.toggle('is-flipped');

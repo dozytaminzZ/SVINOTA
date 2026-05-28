@@ -1,5 +1,7 @@
 import pytest
+import uuid
 from app.extensions import db
+from app.game.service import create_game_for_room
 from app.models import Room, RoomPlayer, User
 
 def test_lobby_index(client):
@@ -146,3 +148,49 @@ def test_non_owner_cannot_start_waiting_room(client):
     assert res.status_code == 403
     assert 'Начать игру может только создатель комнаты.' in res.get_data(as_text=True)
     assert db.session.get(Room, room.id).status == 'waiting'
+
+
+def test_joiner_waiting_room_status_redirects_to_started_game(client):
+    login_guest(client, 'creator-status')
+    res = client.post('/lobby/create', json={'max_players': 4})
+    room_id = res.json['room']['id']
+    invite_code = res.json['room']['invite_code']
+    owner_id = res.json['room']['owner_id']
+
+    client.post('/auth/logout')
+    login_guest(client, 'joiner-status')
+    join_res = client.post('/lobby/join', json={'invite_code': invite_code})
+    assert join_res.status_code == 200
+
+    room = db.session.get(Room, uuid.UUID(room_id))
+    create_game_for_room(room.id, starter_id=owner_id)
+
+    status_res = client.get(f'/lobby/status?room_id={room_id}')
+
+    assert status_res.status_code == 200
+    assert status_res.json['room']['status'] == 'playing'
+    assert status_res.json['game_url'] == f'/lobby/game?room_id={room_id}'
+
+
+def test_game_table_uses_room_players_instead_of_mock_names(client):
+    login_guest(client, 'creator-table')
+    res = client.post('/lobby/create', json={'max_players': 4})
+    room_id = res.json['room']['id']
+    invite_code = res.json['room']['invite_code']
+    owner_id = res.json['room']['owner_id']
+
+    client.post('/auth/logout')
+    login_guest(client, 'joiner-table')
+    client.post('/lobby/join', json={'invite_code': invite_code})
+
+    room = db.session.get(Room, uuid.UUID(room_id))
+    create_game_for_room(room.id, starter_id=owner_id)
+
+    game_res = client.get(f'/lobby/game?room_id={room_id}')
+    html = game_res.get_data(as_text=True)
+
+    assert game_res.status_code == 200
+    assert 'creator-table' in html
+    assert 'Димасик' not in html
+    assert 'Хитрюга' not in html
+    assert 'Валера' not in html

@@ -3,7 +3,11 @@
 {% block title %}Создание игры - SVINOTA{% endblock %}
 
 {% block content %}
-<div class="page create-game-page">
+<div
+    class="page create-game-page"
+    data-waiting-room-id="{{ room.id }}"
+    data-waiting-players-count="{{ players_count }}"
+>
     {% if start_error %}
         <div class="error-stack">
             <div class="error-message">{{ start_error }}</div>

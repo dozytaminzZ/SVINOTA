@@ -6,6 +6,7 @@ from flask import Blueprint, redirect, render_template, request, url_for
 from flask_login import current_user, login_user, logout_user
 
 from app.extensions import db
+from app.game.registry import get_game
 from app.game.service import GameServiceError, create_game_for_room
 from app.models import Room, RoomPlayer, User
 
@@ -142,6 +143,7 @@ def _room_seats(room):
         if member is None:
             seats.append({
                 'seat_index': seat_index,
+                'user_id': None,
                 'is_empty': True,
                 'name': None,
                 'is_owner': False,
@@ -154,6 +156,7 @@ def _room_seats(room):
 
         seats.append({
             'seat_index': seat_index,
+            'user_id': member.user_id,
             'is_empty': False,
             'name': user.username if user else 'Игрок',
             'is_owner': member.user_id == room.owner_id,
@@ -162,6 +165,34 @@ def _room_seats(room):
         })
 
     return seats
+
+
+def _room_active_players(room):
+    seats = _room_seats(room)
+    game = get_game(str(room.id))
+    hand_counts = {}
+
+    if game is not None:
+        state = game.get_state()
+        hand_counts = {
+            player['id']: player['hand_count']
+            for player in state.get('players', [])
+        }
+
+    players = []
+
+    for seat in seats:
+        if seat['is_empty']:
+            continue
+
+        player_id = str(seat.get('user_id', ''))
+        players.append({
+            **seat,
+            'id': player_id,
+            'cards': hand_counts.get(player_id, 8),
+        })
+
+    return players
 
 
 def _create_room_for_current_user(max_players=6, is_private=False):
@@ -545,7 +576,70 @@ def game_table():
     if room.status == 'waiting':
         return redirect(url_for('lobby.create_game'))
 
-    return render_template('lobby.html', room=room)
+    players = _room_active_players(room)
+    current_player = None
+
+    if current_user.is_authenticated:
+        current_player = next(
+            (player for player in players if player['user_id'] == current_user.id),
+            None
+        )
+
+    if current_player is None and players:
+        current_player = players[0]
+
+    opponents = [
+        player
+        for player in players
+        if current_player is None or player['user_id'] != current_player['user_id']
+    ]
+
+    return render_template(
+        'lobby.html',
+        room=room,
+        current_player=current_player,
+        top_players=opponents[:3],
+        left_player=opponents[3] if len(opponents) > 3 else None,
+        right_player=opponents[4] if len(opponents) > 4 else None,
+    )
+
+
+@lobby_bp.route('/status', methods=['GET'])
+def room_status():
+    if not current_user.is_authenticated:
+        return _json_error('authentication required', 401)
+
+    room_id_raw = (request.args.get('room_id') or '').strip()
+
+    if not room_id_raw:
+        membership = RoomPlayer.query.filter_by(user_id=current_user.id).first()
+        room_id = membership.room_id if membership is not None else None
+    else:
+        try:
+            room_id = uuid.UUID(room_id_raw)
+        except ValueError:
+            return _json_error('invalid room_id')
+
+    if room_id is None:
+        return _json_error('user is not in a room', 404)
+
+    membership = RoomPlayer.query.filter_by(room_id=room_id, user_id=current_user.id).first()
+
+    if membership is None:
+        return _json_error('user is not in this room', 403)
+
+    room = db.session.get(Room, room_id)
+
+    if room is None:
+        return _json_error('room not found', 404)
+
+    players_count, ready_count = _room_counts(room.id)
+
+    return {
+        'status': 'ok',
+        'room': _room_payload(room, players_count, ready_count),
+        'game_url': url_for('lobby.game_table', room_id=str(room.id)),
+    }
 
 
 @lobby_bp.route('/rooms', methods=['GET'])
