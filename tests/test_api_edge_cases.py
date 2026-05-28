@@ -1,4 +1,5 @@
 import pytest
+from app.game.service import create_game_for_room
 from app.models import Room
 
 def test_auth_missing_fields(client):
@@ -46,7 +47,7 @@ def test_play_card_missing_data(client):
     p2 = login_guest(client, 'p2')
     client.post('/lobby/join', json={'invite_code': r1.json['room']['invite_code']})
     
-    client.post('/game/create', json={'room_id': room_id})
+    create_game_for_room(room_id, starter_id=p1)
     
     # Пытаемся сделать play без card_id
     res = client.post('/game/play', json={'room_id': room_id}) # card_id missing

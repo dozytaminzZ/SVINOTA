@@ -1,5 +1,6 @@
 import pytest
-from app.models import Room, RoomPlayer
+from app.extensions import db
+from app.models import Room, RoomPlayer, User
 
 def test_lobby_index(client):
     res = client.get('/lobby/')
@@ -81,3 +82,67 @@ def test_leave_room(client):
     res = client.post('/lobby/leave')
     assert res.status_code == 200
     assert res.json['status'] == 'ok'
+
+def test_guest_leave_room_logs_out_and_removes_empty_room(client):
+    client.get('/lobby/create')
+    room = Room.query.first()
+    user = User.query.first()
+
+    assert room is not None
+    assert user is not None
+    assert user.is_guest is True
+
+    res = client.post('/lobby/leave', data={
+        'room_id': str(room.id),
+        'next': 'index'
+    })
+
+    assert res.status_code == 302
+    assert Room.query.count() == 0
+    assert RoomPlayer.query.count() == 0
+    assert User.query.filter_by(id=user.id).first() is None
+
+    profile_res = client.get('/auth/profile')
+    assert profile_res.status_code == 401
+
+def test_owner_leave_waiting_room_deletes_room_and_players(app):
+    owner_client = app.test_client()
+
+    owner_client.get('/lobby/create')
+    room = Room.query.first()
+    joiner = User(username='joiner-guest', is_guest=True)
+    db.session.add(joiner)
+    db.session.flush()
+    db.session.add(RoomPlayer(
+        room_id=room.id,
+        user_id=joiner.id,
+        seat_index=1
+    ))
+    db.session.commit()
+
+    assert RoomPlayer.query.filter_by(room_id=room.id).count() == 2
+
+    leave_res = owner_client.post('/lobby/leave', data={
+        'room_id': str(room.id),
+        'next': 'index'
+    })
+
+    assert leave_res.status_code == 302
+    assert db.session.get(Room, room.id) is None
+    assert RoomPlayer.query.filter_by(room_id=room.id).count() == 0
+    assert User.query.count() == 0
+
+def test_non_owner_cannot_start_waiting_room(client):
+    client.get('/lobby/create')
+    room = Room.query.first()
+    invite_code = room.invite_code
+
+    client.post('/auth/logout')
+    client.post('/auth/guest', json={'username': 'joiner'})
+    client.post('/lobby/join', json={'invite_code': invite_code})
+
+    res = client.post('/lobby/create')
+
+    assert res.status_code == 403
+    assert 'Начать игру может только создатель комнаты.' in res.get_data(as_text=True)
+    assert db.session.get(Room, room.id).status == 'waiting'

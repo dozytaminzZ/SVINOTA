@@ -51,8 +51,19 @@ def get_game_or_error(room_id: uuid.UUID):
     return game
 
 
-def create_game_for_room(room_id: uuid.UUID):
+def create_game_for_room(room_id: uuid.UUID, starter_id=None):
+    room_id = parse_room_id(room_id)
     room = get_room(room_id)
+
+    if starter_id is not None:
+        try:
+            starter_id = uuid.UUID(str(starter_id))
+        except ValueError:
+            raise GameServiceError("invalid starter_id", "invalid_starter_id")
+
+    if starter_id is not None and room.owner_id != starter_id:
+        raise GameServiceError("only room owner can start the game", "not_room_owner", 403)
+
     if get_game(str(room_id)) is not None:
         raise GameServiceError("game already exists", "game_exists", 409)
 

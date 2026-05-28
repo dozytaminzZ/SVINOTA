@@ -10,10 +10,14 @@
         </div>
     {% endif %}
 
-    <a class="back-link create-back-link" href="/">
-        <span class="back-arrow" aria-hidden="true"></span>
-        Назад
-    </a>
+    <form class="leave-room-form" method="post" action="{{ url_for('lobby.leave_room') }}">
+        <input type="hidden" name="room_id" value="{{ room.id }}">
+        <input type="hidden" name="next" value="index">
+        <button class="back-link create-back-link" type="submit">
+            <span class="back-arrow" aria-hidden="true"></span>
+            Назад
+        </button>
+    </form>
 
     <main class="create-game-wrap">
         <section class="create-game-panel" aria-label="Создание игры">

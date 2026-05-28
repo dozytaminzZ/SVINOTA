@@ -1,6 +1,9 @@
 import pytest
+import uuid
 from app.game.registry import _REGISTRY
-from app.models import Room, RoomPlayer
+from app.game.service import create_game_for_room
+from app.extensions import db
+from app.models import RoomPlayer, User
 
 def login_guest(client, username):
     res = client.post('/auth/guest', json={'username': username})
@@ -38,21 +41,49 @@ def test_game_index(client):
 
 def test_create_game(client, test_room):
     room_id = test_room['room_id']
-    # Текущий пользователь - p2
-    
+    # Текущий пользователь - p2, не создатель комнаты.
     res = client.post('/game/create', json={'room_id': room_id})
+    assert res.status_code == 403
+    assert res.json['code'] == 'not_room_owner'
+
+def test_create_game_owner_only(client, test_room):
+    room_id = test_room['room_id']
+    client.post('/auth/logout')
+    client.post('/auth/guest', json={'username': 'owner-check'})
+
+    # Новый пользователь не состоит в комнате и не может стартовать игру.
+    res = client.post('/game/create', json={'room_id': room_id})
+    assert res.status_code == 403
+
+def test_create_game_by_owner(app):
+    owner_client = app.test_client()
+
+    owner = login_guest(owner_client, 'owner')
+    create_res = owner_client.post('/lobby/create', json={'max_players': 2})
+    room_id = create_res.json['room']['id']
+    joiner = User(username='joiner', is_guest=True)
+    db.session.add(joiner)
+    db.session.flush()
+    db.session.add(RoomPlayer(
+        room_id=uuid.UUID(room_id),
+        user_id=joiner.id,
+        seat_index=1
+    ))
+    db.session.commit()
+
+    res = owner_client.post('/game/create', json={'room_id': room_id})
     assert res.status_code == 201
     assert 'state' in res.json
     assert res.json['state']['status'] == 'playing'
     
     # room_id должен стать playing в бд (опосредованно)
-    db_room = client.get('/lobby/rooms').json['rooms']
+    db_room = owner_client.get('/lobby/rooms').json['rooms']
     target = [r for r in db_room if r['id'] == room_id][0]
     assert target['status'] == 'playing'
 
 def test_get_state(client, test_room):
     room_id = test_room['room_id']
-    client.post('/game/create', json={'room_id': room_id})
+    create_game_for_room(room_id, starter_id=test_room['p1'])
     
     res = client.get(f'/game/state?room_id={room_id}')
     assert res.status_code == 200
@@ -62,7 +93,7 @@ def test_get_state(client, test_room):
 
 def test_game_draw_card(client, test_room):
     room_id = test_room['room_id']
-    client.post('/game/create', json={'room_id': room_id})
+    create_game_for_room(room_id, starter_id=test_room['p1'])
     
     # p2 делает запрос, чтобы получить state
     res = client.get(f'/game/state?room_id={room_id}')

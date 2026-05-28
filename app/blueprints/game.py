@@ -61,7 +61,7 @@ def create_game():
     try:
         room_id = _get_room_id_from_data(data)
         get_membership(room_id, current_user.id)
-        game = create_game_for_room(room_id)
+        game = create_game_for_room(room_id, starter_id=current_user.id)
         return {"status": "ok", "state": _state_payload(game, current_user.id)}, 201
     except (GameServiceError, GameRuleError) as exc:
         status_code = getattr(exc, "status_code", 400)

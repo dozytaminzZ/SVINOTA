@@ -3,7 +3,7 @@ import string
 import uuid
 
 from flask import Blueprint, redirect, render_template, request, url_for
-from flask_login import current_user, login_user
+from flask_login import current_user, login_user, logout_user
 
 from app.extensions import db
 from app.game.service import GameServiceError, create_game_for_room
@@ -196,6 +196,76 @@ def _create_room_for_current_user(max_players=6, is_private=False):
     return room, True
 
 
+def _cleanup_guest_users_if_unused(user_ids, current_user_id):
+    guest_logged_out = False
+
+    for user_id in set(user_ids):
+        user = db.session.get(User, user_id)
+
+        if user is None or not getattr(user, 'is_guest', False):
+            continue
+
+        active_memberships = RoomPlayer.query.filter_by(user_id=user.id).count()
+
+        if active_memberships > 0:
+            continue
+
+        if user.id == current_user_id:
+            guest_logged_out = True
+
+        db.session.delete(user)
+
+    if guest_logged_out:
+        logout_user()
+
+    return guest_logged_out
+
+
+def _leave_current_room(room_id_raw=''):
+    query = RoomPlayer.query.filter_by(user_id=current_user.id)
+
+    if room_id_raw:
+        try:
+            room_uuid = uuid.UUID(room_id_raw)
+        except ValueError:
+            return None, 'invalid room_id', 400
+
+        query = query.filter_by(room_id=room_uuid)
+
+    membership = query.first()
+
+    if membership is None:
+        return None, 'user is not in a room', 404
+
+    user = current_user._get_current_object()
+    room = db.session.get(Room, membership.room_id)
+    cleanup_user_ids = [user.id]
+
+    if room is not None and room.status == 'waiting' and room.owner_id == user.id:
+        cleanup_user_ids = [
+            member.user_id
+            for member in RoomPlayer.query.filter_by(room_id=room.id).all()
+        ]
+        RoomPlayer.query.filter_by(room_id=room.id).delete(synchronize_session=False)
+        db.session.delete(room)
+    else:
+        room_id = membership.room_id
+
+        db.session.delete(membership)
+        db.session.flush()
+
+        remaining = RoomPlayer.query.filter_by(room_id=room_id).count()
+
+        if remaining == 0 and room is not None:
+            db.session.delete(room)
+
+    db.session.flush()
+    guest_logged_out = _cleanup_guest_users_if_unused(cleanup_user_ids, user.id)
+    db.session.commit()
+
+    return {'guest_logged_out': guest_logged_out}, None, 200
+
+
 @lobby_bp.route('/create', methods=['GET', 'POST'])
 def create_game():
     max_players = 6
@@ -250,6 +320,19 @@ def create_game():
         players_count, ready_count = _room_counts(room.id)
         seats = _room_seats(room)
 
+        if room.owner_id != current_user.id:
+            return render_template(
+                'create_game.html',
+                creator_name=current_user.username,
+                invite_code=room.invite_code,
+                max_players=room.max_players,
+                room=room,
+                seats=seats,
+                players_count=players_count,
+                ready_count=ready_count,
+                start_error='Начать игру может только создатель комнаты.',
+            ), 403
+
         if players_count < 2:
             return render_template(
                 'create_game.html',
@@ -264,7 +347,7 @@ def create_game():
             ), 400
 
         try:
-            create_game_for_room(room.id)
+            create_game_for_room(room.id, starter_id=current_user.id)
         except GameServiceError as error:
             if error.code != 'game_exists':
                 return render_template(
@@ -488,35 +571,15 @@ def leave_room():
 
     data = _get_request_data()
     room_id_raw = (data.get('room_id') or '').strip()
+    result, error, status_code = _leave_current_room(room_id_raw)
 
-    query = RoomPlayer.query.filter_by(user_id=current_user.id)
+    if error is not None:
+        return _json_error(error, status_code)
 
-    if room_id_raw:
-        try:
-            room_uuid = uuid.UUID(room_id_raw)
-        except ValueError:
-            return _json_error('invalid room_id')
+    if data.get('next') == 'index':
+        return redirect(url_for('index'))
 
-        query = query.filter_by(room_id=room_uuid)
-
-    membership = query.first()
-
-    if membership is None:
-        return _json_error('user is not in a room', 404)
-
-    room = db.session.get(Room, membership.room_id)
-
-    db.session.delete(membership)
-    db.session.flush()
-
-    remaining = RoomPlayer.query.filter_by(room_id=membership.room_id).count()
-
-    if remaining == 0 and room is not None:
-        db.session.delete(room)
-
-    db.session.commit()
-
-    return {'status': 'ok'}
+    return {'status': 'ok', **result}
 
 
 @lobby_bp.route('/ready', methods=['POST'])

@@ -146,7 +146,11 @@
                 <button class="options-btn" type="button" data-sound-toggle>Выключить звук</button>
                 <button class="options-btn" type="button">Как играть</button>
                 <button class="options-btn" type="button" data-cards-open>О картах</button>
-                <a class="options-btn" href="/">Выйти в меню</a>
+                <form class="options-leave-form" method="post" action="{{ url_for('lobby.leave_room') }}">
+                    <input type="hidden" name="room_id" value="{{ room.id if room is defined else request.args.get('room_id', '') }}">
+                    <input type="hidden" name="next" value="index">
+                    <button class="options-btn" type="submit">Выйти в меню</button>
+                </form>
             </div>
         </section>
     </div>
